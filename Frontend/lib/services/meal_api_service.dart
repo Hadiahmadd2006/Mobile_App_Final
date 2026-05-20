@@ -57,6 +57,33 @@ class MealApiService {
         .toList();
   }
 
+  /// Lists all cuisines/areas (e.g. Italian, Mexican), excluding 'Unknown'.
+  Future<List<String>> fetchAreas() async {
+    final uri = Uri.parse('$_baseUrl/list.php?a=list');
+    final body = await _getJson(uri);
+    final list = body['meals'];
+    if (list is! List) {
+      throw const MealApiException('Unexpected areas payload.');
+    }
+    return list
+        .whereType<Map<String, dynamic>>()
+        .map((area) => (area['strArea'] ?? '').toString())
+        .where((area) => area.isNotEmpty && area.toLowerCase() != 'unknown')
+        .toList();
+  }
+
+  Future<List<Meal>> fetchMealsByArea(String area) async {
+    final encoded = Uri.encodeQueryComponent(area);
+    final uri = Uri.parse('$_baseUrl/filter.php?a=$encoded');
+    final body = await _getJson(uri);
+    final list = body['meals'];
+    if (list == null) return const [];
+    if (list is! List) {
+      throw const MealApiException('Unexpected meals payload.');
+    }
+    return list.whereType<Map<String, dynamic>>().map(Meal.fromJson).toList();
+  }
+
   Future<List<Meal>> searchMealsByName(String query) async {
     final encoded = Uri.encodeQueryComponent(query);
     final uri = Uri.parse('$_baseUrl/search.php?s=$encoded');
@@ -87,6 +114,25 @@ class MealApiService {
       throw const MealApiException('Unexpected detail payload.');
     }
     return MealDetail.fromJson(first);
+  }
+
+  /// Fetches a random recipe, retrying past any excluded category.
+  Future<MealDetail> fetchRandomMeal() async {
+    final uri = Uri.parse('$_baseUrl/random.php');
+    for (var attempt = 0; attempt < 5; attempt++) {
+      final body = await _getJson(uri);
+      final list = body['meals'];
+      if (list is! List || list.isEmpty) {
+        throw const MealApiException('Could not fetch a random recipe.');
+      }
+      final first = list.first;
+      if (first is! Map<String, dynamic>) {
+        throw const MealApiException('Unexpected random payload.');
+      }
+      final meal = MealDetail.fromJson(first);
+      if (!_isExcludedCategory(meal.category)) return meal;
+    }
+    throw const MealApiException('Could not fetch a random recipe.');
   }
 
   Future<Map<String, dynamic>> _getJson(Uri uri) async {

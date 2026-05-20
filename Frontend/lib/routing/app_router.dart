@@ -2,12 +2,14 @@ import 'package:go_router/go_router.dart';
 
 import '../models/meal.dart';
 import '../screens/category_meals_screen.dart';
+import '../screens/cuisine_meals_screen.dart';
 import '../screens/edit_note_screen.dart';
 import '../screens/favorites_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/main_shell.dart';
 import '../screens/meal_detail_screen.dart';
 import '../screens/not_found_screen.dart';
+import '../screens/recently_viewed_screen.dart';
 import '../screens/search_screen.dart';
 import '../screens/splash_screen.dart';
 
@@ -17,6 +19,7 @@ class AppRoutes {
   static const String splash = '/splash';
   static const String home = '/home';
   static const String search = '/search';
+  static const String recent = '/recent';
   static const String favorites = '/favorites';
   static const String categoryById = '/category/:id';
   static const String detailById = '/detail/:id';
@@ -60,6 +63,14 @@ class AppRouter {
                         );
                       },
                     ),
+                    GoRoute(
+                      path: 'cuisine/:area',
+                      name: 'cuisine',
+                      builder: (context, state) {
+                        final area = state.pathParameters['area'] ?? '';
+                        return CuisineMealsScreen(area: area);
+                      },
+                    ),
                   ],
                 ),
               ],
@@ -70,6 +81,15 @@ class AppRouter {
                   path: AppRoutes.search,
                   name: 'search',
                   builder: (context, state) => const SearchScreen(),
+                ),
+              ],
+            ),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: AppRoutes.recent,
+                  name: 'recent',
+                  builder: (context, state) => const RecentlyViewedScreen(),
                 ),
               ],
             ),

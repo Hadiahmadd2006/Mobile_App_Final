@@ -1,16 +1,21 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../app_scope.dart';
+import '../models/meal.dart';
 import '../models/meal_category.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../theme/app_theme.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/category_card.dart';
 import '../widgets/error_view.dart';
 import '../widgets/fade_in_up.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/marquee_ticker.dart';
+import '../widgets/network_image_box.dart';
 import '../widgets/section_heading.dart';
 import '../widgets/stickers.dart';
 
@@ -187,7 +192,320 @@ class _HomeContent extends StatelessWidget {
             ),
           ),
         ),
+        const SliverToBoxAdapter(child: _CuisineSection()),
+        const SliverToBoxAdapter(child: _RecentlyViewedSection()),
       ],
+    );
+  }
+}
+
+/// Continent grouping for TheMealDB cuisines/areas. Anything not listed
+/// falls back to an "Other" bucket so new areas are never lost.
+const Map<String, String> _continentByArea = {
+  'British': 'Europe', 'Croatian': 'Europe', 'Dutch': 'Europe',
+  'French': 'Europe', 'Greek': 'Europe', 'Irish': 'Europe',
+  'Italian': 'Europe', 'Norwegian': 'Europe', 'Polish': 'Europe',
+  'Portuguese': 'Europe', 'Russian': 'Europe', 'Spanish': 'Europe',
+  'Turkish': 'Europe', 'Ukrainian': 'Europe',
+  'Chinese': 'Asia', 'Filipino': 'Asia', 'Indian': 'Asia',
+  'Japanese': 'Asia', 'Malaysian': 'Asia', 'Thai': 'Asia',
+  'Vietnamese': 'Asia',
+  'Egyptian': 'Africa', 'Kenyan': 'Africa', 'Moroccan': 'Africa',
+  'Tunisian': 'Africa',
+  'American': 'Americas', 'Canadian': 'Americas', 'Jamaican': 'Americas',
+  'Mexican': 'Americas', 'Uruguayan': 'Americas',
+};
+
+const List<String> _continentOrder = [
+  'Africa',
+  'Americas',
+  'Asia',
+  'Europe',
+  'Oceania',
+  'Other',
+];
+
+/// Home section: cuisines grouped into expandable continent tiles.
+class _CuisineSection extends StatefulWidget {
+  const _CuisineSection();
+
+  @override
+  State<_CuisineSection> createState() => _CuisineSectionState();
+}
+
+class _CuisineSectionState extends State<_CuisineSection> {
+  Future<List<String>>? _areasFuture;
+  String? _expanded;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _areasFuture ??= AppScope.of(context).api.fetchAreas();
+  }
+
+  Map<String, List<String>> _groupByContinent(List<String> areas) {
+    final grouped = <String, List<String>>{};
+    for (final area in areas) {
+      final continent = _continentByArea[area] ?? 'Other';
+      grouped.putIfAbsent(continent, () => <String>[]).add(area);
+    }
+    for (final list in grouped.values) {
+      list.sort();
+    }
+    return grouped;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<String>>(
+      future: _areasFuture,
+      builder: (context, snapshot) {
+        final areas = snapshot.data ?? const <String>[];
+        if (areas.isEmpty) return const SizedBox.shrink();
+        final grouped = _groupByContinent(areas);
+        final continents = _continentOrder.where(grouped.containsKey).toList();
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 36),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SectionHeading(
+                eyebrow: 'Passport',
+                title: 'BROWSE BY\nCUISINE',
+              ),
+              const SizedBox(height: 16),
+              for (final continent in continents)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _ContinentTile(
+                    continent: continent,
+                    areas: grouped[continent]!,
+                    expanded: _expanded == continent,
+                    onToggle: () => setState(
+                      () => _expanded =
+                          _expanded == continent ? null : continent,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// An expandable card for one continent; reveals its cuisines when tapped.
+class _ContinentTile extends StatelessWidget {
+  final String continent;
+  final List<String> areas;
+  final bool expanded;
+  final VoidCallback onToggle;
+
+  const _ContinentTile({
+    required this.continent,
+    required this.areas,
+    required this.expanded,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        border: Border.all(color: AppColors.espresso, width: 1.5),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onToggle,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(18, 15, 14, 15),
+                child: Row(
+                  children: [
+                    Text(continent, style: AppTextStyles.subheading),
+                    const Spacer(),
+                    Text(
+                      '${areas.length} cuisines',
+                      style: AppTextStyles.label,
+                    ),
+                    const SizedBox(width: 8),
+                    AnimatedRotation(
+                      turns: expanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: AppColors.espresso,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            alignment: Alignment.topCenter,
+            child: expanded
+                ? Column(
+                    children: [
+                      for (final area in areas) ...[
+                        const Divider(height: 1, color: AppColors.border),
+                        _CountryRow(area: area),
+                      ],
+                    ],
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A single tappable cuisine row inside an expanded continent tile.
+class _CountryRow extends StatelessWidget {
+  final String area;
+
+  const _CountryRow({required this.area});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.go('/home/cuisine/${Uri.encodeComponent(area)}'),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+          child: Row(
+            children: [
+              Container(
+                width: 6,
+                height: 6,
+                decoration: const BoxDecoration(
+                  color: AppColors.orange,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: Text(area, style: AppTextStyles.body)),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 12,
+                color: AppColors.muted,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Home section: a horizontal strip of recently opened recipes.
+class _RecentlyViewedSection extends StatefulWidget {
+  const _RecentlyViewedSection();
+
+  @override
+  State<_RecentlyViewedSection> createState() => _RecentlyViewedSectionState();
+}
+
+class _RecentlyViewedSectionState extends State<_RecentlyViewedSection> {
+  List<Meal> _recent = const [];
+  StreamSubscription<List<Meal>>? _subscription;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_subscription != null) return;
+    final repo = AppScope.of(context).recentlyViewed;
+    repo.getRecent().then((list) {
+      if (mounted) setState(() => _recent = list);
+    });
+    _subscription = repo.watch().listen((list) {
+      if (mounted) setState(() => _recent = list);
+    });
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_recent.isEmpty) return const SizedBox.shrink();
+    final shown = _recent.take(3).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.fromLTRB(24, 0, 24, 14),
+          child: SectionHeading(
+            eyebrow: 'Jump back in',
+            title: 'RECENTLY\nVIEWED',
+          ),
+        ),
+        SizedBox(
+          height: 156,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            itemCount: shown.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 14),
+            itemBuilder: (context, index) => _RecentCard(meal: shown[index]),
+          ),
+        ),
+        const SizedBox(height: 36),
+      ],
+    );
+  }
+}
+
+class _RecentCard extends StatelessWidget {
+  final Meal meal;
+
+  const _RecentCard({required this.meal});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/detail/${meal.id}', extra: meal),
+      child: SizedBox(
+        width: 132,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 96,
+              width: 132,
+              child: NetworkImageBox(
+                url: meal.thumbnailUrl,
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              meal.name,
+              style: AppTextStyles.label.copyWith(
+                color: AppColors.espresso,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                height: 1.25,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

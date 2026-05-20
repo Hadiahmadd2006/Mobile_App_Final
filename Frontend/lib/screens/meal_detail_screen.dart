@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../app_scope.dart';
 import '../models/favorite_meal.dart';
@@ -132,11 +133,23 @@ class _DetailContent extends StatefulWidget {
 class _DetailContentState extends State<_DetailContent> {
   bool _isFavorite = false;
   bool _favoriteLoading = true;
+  bool _recorded = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _checkFavorite();
+    if (!_recorded) {
+      _recorded = true;
+      final detail = widget.detail;
+      AppScope.of(context).recentlyViewed.record(
+        Meal(
+          id: detail.id,
+          name: detail.name,
+          thumbnailUrl: detail.thumbnailUrl,
+        ),
+      );
+    }
   }
 
   Future<void> _checkFavorite() async {
@@ -184,13 +197,27 @@ class _DetailContentState extends State<_DetailContent> {
 
   void _share() {
     final detail = widget.detail;
-    final text =
-        '${detail.name} — a ${detail.area} ${detail.category.toLowerCase()} '
-        'recipe from TerraBite.';
-    Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Recipe summary copied to clipboard.')),
+    final buffer = StringBuffer(
+      '${detail.name} — a ${detail.area} '
+      '${detail.category.toLowerCase()} recipe from TerraBite.',
     );
+    final link = detail.sourceUrl ?? detail.youtubeUrl;
+    if (link != null) buffer.write('\n$link');
+    SharePlus.instance.share(
+      ShareParams(text: buffer.toString(), subject: detail.name),
+    );
+  }
+
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && mounted) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text("Couldn't open that link.")),
+      );
+    }
   }
 
   @override
@@ -276,6 +303,15 @@ class _DetailContentState extends State<_DetailContent> {
                     onToggleFavorite: _toggleFavorite,
                     onShare: _share,
                   ),
+                  if (detail.youtubeUrl != null ||
+                      detail.sourceUrl != null) ...[
+                    const SizedBox(height: 10),
+                    _RecipeLinks(
+                      youtubeUrl: detail.youtubeUrl,
+                      sourceUrl: detail.sourceUrl,
+                      onOpen: _openUrl,
+                    ),
+                  ],
                   const SizedBox(height: 28),
                   if (detail.tags.isNotEmpty) ...[
                     const _SectionLabel(label: 'TAGS'),
@@ -378,6 +414,46 @@ class _ActionBar extends StatelessWidget {
           icon: const Icon(Icons.ios_share_rounded, size: 18),
           label: const Text('Share'),
         ),
+      ],
+    );
+  }
+}
+
+class _RecipeLinks extends StatelessWidget {
+  final String? youtubeUrl;
+  final String? sourceUrl;
+  final Future<void> Function(String url) onOpen;
+
+  const _RecipeLinks({
+    required this.onOpen,
+    this.youtubeUrl,
+    this.sourceUrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        if (youtubeUrl != null)
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => onOpen(youtubeUrl!),
+              icon: const Icon(Icons.play_circle_outline_rounded, size: 18),
+              label: const Text('Watch the video'),
+            ),
+          ),
+        if (youtubeUrl != null && sourceUrl != null)
+          const SizedBox(height: 10),
+        if (sourceUrl != null)
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => onOpen(sourceUrl!),
+              icon: const Icon(Icons.menu_book_rounded, size: 18),
+              label: const Text('Original recipe'),
+            ),
+          ),
       ],
     );
   }

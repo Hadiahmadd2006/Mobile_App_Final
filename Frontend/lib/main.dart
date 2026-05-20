@@ -6,6 +6,7 @@ import 'routing/app_router.dart';
 import 'services/favorites_repository.dart';
 import 'services/in_memory_favorites_repository.dart';
 import 'services/meal_api_service.dart';
+import 'services/recently_viewed_repository.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
@@ -16,8 +17,16 @@ Future<void> main() async {
     final FavoritesRepository favorites = kIsWeb
         ? InMemoryFavoritesRepository()
         : SqfliteFavoritesRepository();
+    final recentlyViewed = RecentlyViewedRepository();
     await favorites.init().timeout(const Duration(seconds: 15));
-    runApp(TerraBiteApp(api: api, favorites: favorites));
+    await recentlyViewed.init();
+    runApp(
+      TerraBiteApp(
+        api: api,
+        favorites: favorites,
+        recentlyViewed: recentlyViewed,
+      ),
+    );
   } catch (error, stack) {
     debugPrint('TerraBite startup failed: $error\n$stack');
     runApp(StartupErrorApp(error: '$error', stack: '$stack'));
@@ -27,11 +36,13 @@ Future<void> main() async {
 class TerraBiteApp extends StatelessWidget {
   final MealApiService api;
   final FavoritesRepository favorites;
+  final RecentlyViewedRepository recentlyViewed;
 
   const TerraBiteApp({
     super.key,
     required this.api,
     required this.favorites,
+    required this.recentlyViewed,
   });
 
   @override
@@ -39,6 +50,7 @@ class TerraBiteApp extends StatelessWidget {
     return AppScope(
       api: api,
       favorites: favorites,
+      recentlyViewed: recentlyViewed,
       child: MaterialApp.router(
         title: 'TerraBite',
         debugShowCheckedModeBanner: false,
