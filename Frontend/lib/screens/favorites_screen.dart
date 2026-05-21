@@ -7,18 +7,41 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../theme/app_theme.dart';
 import '../widgets/empty_view.dart';
+import '../widgets/in_page_search_app_bar.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/network_image_box.dart';
 
-class FavoritesScreen extends StatelessWidget {
+class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
 
   @override
+  State<FavoritesScreen> createState() => _FavoritesScreenState();
+}
+
+class _FavoritesScreenState extends State<FavoritesScreen> {
+  String _query = '';
+
+  List<FavoriteMeal> _applyQuery(List<FavoriteMeal> favorites) {
+    final query = _query.trim().toLowerCase();
+    if (query.isEmpty) return favorites;
+    return favorites
+        .where((meal) => meal.name.toLowerCase().contains(query))
+        .toList();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Rebuild this screen when the iOS light/dark appearance changes.
+    MediaQuery.platformBrightnessOf(context);
     final repo = AppScope.of(context).favorites;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Favorites')),
+      appBar: InPageSearchAppBar(
+        title: 'Favorites',
+        large: true,
+        hint: 'Search your favorites…',
+        onChanged: (query) => setState(() => _query = query),
+      ),
       body: SafeArea(
         top: false,
         child: StreamBuilder<List<FavoriteMeal>>(
@@ -31,11 +54,11 @@ class FavoritesScreen extends StatelessWidget {
               builder: (context, future) {
                 if (future.connectionState == ConnectionState.waiting &&
                     !future.hasData) {
-                  return const LoadingView(message: 'Reading your shelf');
+                  return LoadingView(message: 'Reading your shelf');
                 }
                 final favorites = future.data ?? const [];
                 if (favorites.isEmpty) {
-                  return const EmptyView(
+                  return EmptyView(
                     icon: Icons.bookmark_outline_rounded,
                     title: 'No favorites yet',
                     message:
@@ -43,7 +66,15 @@ class FavoritesScreen extends StatelessWidget {
                         'personal cooking notes.',
                   );
                 }
-                return _FavoritesList(favorites: favorites);
+                final filtered = _applyQuery(favorites);
+                if (filtered.isEmpty) {
+                  return EmptyView(
+                    icon: Icons.search_off_rounded,
+                    title: 'No matches',
+                    message: 'None of your favorites match "$_query".',
+                  );
+                }
+                return _FavoritesList(favorites: filtered);
               },
             );
           },
@@ -148,19 +179,19 @@ class _FavoriteTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
           border: Border.all(color: AppColors.espresso, width: 1.5),
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Text(
               'REMOVE',
               style: TextStyle(
-                color: AppColors.cream,
+                color: AppColors.textOnDark,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1,
               ),
             ),
-            SizedBox(width: 8),
-            Icon(Icons.delete_outline_rounded, color: AppColors.cream),
+            const SizedBox(width: 8),
+            Icon(Icons.delete_outline_rounded, color: AppColors.textOnDark),
           ],
         ),
       ),
@@ -218,7 +249,7 @@ class _FavoriteTile extends StatelessWidget {
                 ),
                 IconButton(
                   tooltip: 'Edit note',
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.edit_outlined,
                     color: AppColors.orange,
                   ),

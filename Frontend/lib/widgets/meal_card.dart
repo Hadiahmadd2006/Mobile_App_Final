@@ -35,7 +35,7 @@ class MealCard extends StatelessWidget {
             children: [
               Expanded(child: NetworkImageBox(url: meal.thumbnailUrl)),
               Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   border: Border(
                     top: BorderSide(color: AppColors.espresso, width: 1.5),
                   ),
@@ -55,13 +55,13 @@ class MealCard extends StatelessWidget {
                     Container(
                       width: 30,
                       height: 30,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: AppColors.orange,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_outward_rounded,
-                        color: AppColors.cream,
+                        color: AppColors.textOnDark,
                         size: 16,
                       ),
                     ),

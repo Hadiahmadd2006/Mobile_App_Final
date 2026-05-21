@@ -38,7 +38,7 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.splash,
           name: 'splash',
-          builder: (context, state) => const SplashScreen(),
+          builder: (context, state) => SplashScreen(),
         ),
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) =>
@@ -49,7 +49,7 @@ class AppRouter {
                 GoRoute(
                   path: AppRoutes.home,
                   name: 'home',
-                  builder: (context, state) => const HomeScreen(),
+                  builder: (context, state) => HomeScreen(),
                   routes: [
                     GoRoute(
                       path: 'category/:id',
@@ -80,7 +80,7 @@ class AppRouter {
                 GoRoute(
                   path: AppRoutes.search,
                   name: 'search',
-                  builder: (context, state) => const SearchScreen(),
+                  builder: (context, state) => SearchScreen(),
                 ),
               ],
             ),
@@ -89,7 +89,7 @@ class AppRouter {
                 GoRoute(
                   path: AppRoutes.recent,
                   name: 'recent',
-                  builder: (context, state) => const RecentlyViewedScreen(),
+                  builder: (context, state) => RecentlyViewedScreen(),
                 ),
               ],
             ),
@@ -98,7 +98,7 @@ class AppRouter {
                 GoRoute(
                   path: AppRoutes.favorites,
                   name: 'favorites',
-                  builder: (context, state) => const FavoritesScreen(),
+                  builder: (context, state) => FavoritesScreen(),
                 ),
               ],
             ),

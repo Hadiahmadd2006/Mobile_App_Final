@@ -20,7 +20,7 @@ class NetworkImageBox extends StatelessWidget {
     final image = CachedNetworkImage(
       imageUrl: url,
       fit: fit,
-      placeholder: (context, _) => const ColoredBox(
+      placeholder: (context, _) => ColoredBox(
         color: AppColors.surfaceSunk,
         child: Center(
           child: SizedBox(
@@ -33,7 +33,7 @@ class NetworkImageBox extends StatelessWidget {
           ),
         ),
       ),
-      errorWidget: (context, _, _) => const ColoredBox(
+      errorWidget: (context, _, _) => ColoredBox(
         color: AppColors.surfaceSunk,
         child: Center(
           child: Icon(

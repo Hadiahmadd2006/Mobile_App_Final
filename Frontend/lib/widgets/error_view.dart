@@ -32,7 +32,7 @@ class ErrorView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                 border: Border.all(color: AppColors.espresso, width: 2),
               ),
-              child: Icon(icon, size: 36, color: AppColors.cream),
+              child: Icon(icon, size: 36, color: AppColors.textOnDark),
             ),
             const SizedBox(height: AppTheme.spaceLg),
             Text(

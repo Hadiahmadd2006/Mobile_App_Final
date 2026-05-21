@@ -89,8 +89,16 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Rebuild this screen when the iOS light/dark appearance changes.
+    MediaQuery.platformBrightnessOf(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Search')),
+      appBar: AppBar(
+        toolbarHeight: 74,
+        title: Text(
+          'Search',
+          style: AppTextStyles.heading.copyWith(fontSize: 30),
+        ),
+      ),
       body: SafeArea(
         top: false,
         child: Column(
@@ -131,7 +139,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildResults() {
     if (_query.isEmpty) {
-      return const EmptyView(
+      return EmptyView(
         icon: Icons.search_rounded,
         title: 'Search the menu',
         message:
@@ -140,7 +148,7 @@ class _SearchScreenState extends State<SearchScreen> {
       );
     }
     if (_loading) {
-      return const LoadingView(message: 'Cooking up results');
+      return LoadingView(message: 'Cooking up results');
     }
     if (_error != null) {
       return ErrorView(message: _error!, onRetry: () => _runSearch(_query));
@@ -207,13 +215,13 @@ class _SearchResultTile extends StatelessWidget {
               Container(
                 width: 32,
                 height: 32,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppColors.orange,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.arrow_outward_rounded,
-                  color: AppColors.cream,
+                  color: AppColors.textOnDark,
                   size: 17,
                 ),
               ),

@@ -74,7 +74,7 @@ class CategoryCard extends StatelessWidget {
                         maxLines: 1,
                         softWrap: false,
                         style: AppTextStyles.heading.copyWith(
-                          color: AppColors.cream,
+                          color: AppColors.textOnDark,
                           fontSize: 22,
                         ),
                       ),
@@ -93,9 +93,9 @@ class CategoryCard extends StatelessWidget {
                     shape: BoxShape.circle,
                     border: Border.all(color: AppColors.espresso, width: 2),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.arrow_outward_rounded,
-                    color: AppColors.cream,
+                    color: AppColors.textOnDark,
                     size: 18,
                   ),
                 ),

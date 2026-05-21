@@ -7,6 +7,7 @@ import 'services/favorites_repository.dart';
 import 'services/in_memory_favorites_repository.dart';
 import 'services/meal_api_service.dart';
 import 'services/recently_viewed_repository.dart';
+import 'theme/app_colors.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
@@ -33,7 +34,7 @@ Future<void> main() async {
   }
 }
 
-class TerraBiteApp extends StatelessWidget {
+class TerraBiteApp extends StatefulWidget {
   final MealApiService api;
   final FavoritesRepository favorites;
   final RecentlyViewedRepository recentlyViewed;
@@ -46,16 +47,47 @@ class TerraBiteApp extends StatelessWidget {
   });
 
   @override
+  State<TerraBiteApp> createState() => _TerraBiteAppState();
+}
+
+class _TerraBiteAppState extends State<TerraBiteApp>
+    with WidgetsBindingObserver {
+  // Created once so navigation state survives dark/light rebuilds.
+  final _router = AppRouter.build();
+
+  @override
+  void initState() {
+    super.initState();
+    AppColors.brightness =
+        WidgetsBinding.instance.platformDispatcher.platformBrightness;
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    final next = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+    if (next != AppColors.brightness) {
+      setState(() => AppColors.brightness = next);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AppScope(
-      api: api,
-      favorites: favorites,
-      recentlyViewed: recentlyViewed,
+      api: widget.api,
+      favorites: widget.favorites,
+      recentlyViewed: widget.recentlyViewed,
       child: MaterialApp.router(
         title: 'TerraBite',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.build(),
-        routerConfig: AppRouter.build(),
+        routerConfig: _router,
       ),
     );
   }

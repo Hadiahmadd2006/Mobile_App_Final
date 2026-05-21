@@ -9,6 +9,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../theme/app_theme.dart';
 import '../widgets/empty_view.dart';
+import '../widgets/in_page_search_app_bar.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/network_image_box.dart';
 
@@ -23,6 +24,7 @@ class RecentlyViewedScreen extends StatefulWidget {
 class _RecentlyViewedScreenState extends State<RecentlyViewedScreen> {
   List<Meal> _recent = const [];
   bool _loaded = false;
+  String _query = '';
   StreamSubscription<List<Meal>>? _subscription;
 
   @override
@@ -54,29 +56,52 @@ class _RecentlyViewedScreenState extends State<RecentlyViewedScreen> {
     super.dispose();
   }
 
+  List<Meal> _applyQuery(List<Meal> meals) {
+    final query = _query.trim().toLowerCase();
+    if (query.isEmpty) return meals;
+    return meals
+        .where((meal) => meal.name.toLowerCase().contains(query))
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Rebuild this screen when the iOS light/dark appearance changes.
+    MediaQuery.platformBrightnessOf(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Recently Viewed')),
+      appBar: InPageSearchAppBar(
+        title: 'Recently Viewed',
+        large: true,
+        hint: 'Search your history…',
+        onChanged: (query) => setState(() => _query = query),
+      ),
       body: SafeArea(top: false, child: _buildBody()),
     );
   }
 
   Widget _buildBody() {
     if (!_loaded) {
-      return const LoadingView(message: 'Reading your history');
+      return LoadingView(message: 'Reading your history');
     }
     if (_recent.isEmpty) {
-      return const EmptyView(
+      return EmptyView(
         icon: Icons.history_rounded,
         title: 'Nothing here yet',
         message: 'Recipes you open will collect here so you can jump '
             'straight back to them.',
       );
     }
+    final filtered = _applyQuery(_recent);
+    if (filtered.isEmpty) {
+      return EmptyView(
+        icon: Icons.search_off_rounded,
+        title: 'No matches',
+        message: 'None of your recent recipes match "$_query".',
+      );
+    }
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
-      itemCount: _recent.length + 1,
+      itemCount: filtered.length + 1,
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         if (index == 0) {
@@ -88,8 +113,8 @@ class _RecentlyViewedScreenState extends State<RecentlyViewedScreen> {
                 Text('YOUR HISTORY', style: AppTextStyles.eyebrow),
                 const SizedBox(height: 10),
                 Text(
-                  '${_recent.length} recent '
-                  '${_recent.length == 1 ? 'recipe' : 'recipes'}',
+                  '${filtered.length} recent '
+                  '${filtered.length == 1 ? 'recipe' : 'recipes'}',
                   style: AppTextStyles.heading,
                 ),
                 const SizedBox(height: 4),
@@ -101,7 +126,7 @@ class _RecentlyViewedScreenState extends State<RecentlyViewedScreen> {
             ),
           );
         }
-        return _RecentRow(meal: _recent[index - 1]);
+        return _RecentRow(meal: filtered[index - 1]);
       },
     );
   }
@@ -145,13 +170,13 @@ class _RecentRow extends StatelessWidget {
               Container(
                 width: 32,
                 height: 32,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppColors.orange,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.arrow_outward_rounded,
-                  color: AppColors.cream,
+                  color: AppColors.textOnDark,
                   size: 17,
                 ),
               ),

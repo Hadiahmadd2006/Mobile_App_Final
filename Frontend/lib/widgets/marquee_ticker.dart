@@ -100,7 +100,7 @@ class _MarqueeTickerState extends State<MarqueeTicker>
       transform: Matrix4.identity()..setEntry(1, 0, -0.03),
       alignment: Alignment.center,
       child: ColoredBox(
-        color: AppColors.espresso,
+        color: AppColors.surfaceDark,
         child: SizedBox(
           height: 56,
           width: double.infinity,

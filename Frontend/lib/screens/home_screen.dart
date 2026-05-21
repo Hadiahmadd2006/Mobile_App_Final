@@ -43,8 +43,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Rebuild this screen when the iOS light/dark appearance changes.
+    MediaQuery.platformBrightnessOf(context);
     return Scaffold(
-      drawer: const AppDrawer(),
+      drawer: AppDrawer(),
       appBar: AppBar(
         title: Row(
           mainAxisSize: MainAxisSize.min,
@@ -52,14 +54,14 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Text(
               'TerraBite',
-              style: AppTextStyles.heading.copyWith(fontSize: 21),
+              style: AppTextStyles.brand(21),
             ),
             const SizedBox(width: 5),
             Container(
               margin: const EdgeInsets.only(bottom: 5),
               width: 8,
               height: 8,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.orange,
                 shape: BoxShape.circle,
               ),
@@ -80,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
           future: _categoriesFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const LoadingView(message: 'Stocking the pantry');
+              return LoadingView(message: 'Stocking the pantry');
             }
             if (snapshot.hasError) {
               return ErrorView(
@@ -122,7 +124,7 @@ class _HomeContent extends StatelessWidget {
                   Text("TONIGHT'S CRAVING", style: AppTextStyles.eyebrow),
                   const SizedBox(height: 12),
                   Text(
-                    'WHAT ARE YOU\nIN THE MOOD FOR?',
+                    'What are you\nin the mood for?',
                     style: AppTextStyles.display,
                   ),
                   const SizedBox(height: 14),
@@ -137,15 +139,17 @@ class _HomeContent extends StatelessWidget {
                     runSpacing: 12,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      const StarSticker(text: 'FRESH\nPICKS', size: 80),
+                      StarSticker(text: 'FRESH\nPICKS', size: 80),
                       PillSticker(
                         text: '${categories.length} categories',
                         background: AppColors.lime,
+                        foreground: AppColors.inkFixed,
+                        borderColor: AppColors.inkFixed,
                       ),
-                      const PillSticker(
+                      PillSticker(
                         text: 'no shortcuts',
                         background: AppColors.orange,
-                        foreground: AppColors.cream,
+                        foreground: AppColors.textOnDark,
                       ),
                     ],
                   ),
@@ -162,9 +166,9 @@ class _HomeContent extends StatelessWidget {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 30, 24, 14),
-            child: const SectionHeading(
+            child: SectionHeading(
               eyebrow: 'The Menu',
-              title: 'BROWSE BY\nCATEGORY',
+              title: 'Browse by\ncategory',
             ),
           ),
         ),
@@ -192,8 +196,8 @@ class _HomeContent extends StatelessWidget {
             ),
           ),
         ),
-        const SliverToBoxAdapter(child: _CuisineSection()),
-        const SliverToBoxAdapter(child: _RecentlyViewedSection()),
+        SliverToBoxAdapter(child: _CuisineSection()),
+        SliverToBoxAdapter(child: _RecentlyViewedSection()),
       ],
     );
   }
@@ -269,9 +273,9 @@ class _CuisineSectionState extends State<_CuisineSection> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SectionHeading(
+              SectionHeading(
                 eyebrow: 'Passport',
-                title: 'BROWSE BY\nCUISINE',
+                title: 'Browse by\ncuisine',
               ),
               const SizedBox(height: 16),
               for (final continent in continents)
@@ -338,7 +342,7 @@ class _ContinentTile extends StatelessWidget {
                     AnimatedRotation(
                       turns: expanded ? 0.5 : 0,
                       duration: const Duration(milliseconds: 200),
-                      child: const Icon(
+                      child: Icon(
                         Icons.keyboard_arrow_down_rounded,
                         color: AppColors.espresso,
                       ),
@@ -356,7 +360,7 @@ class _ContinentTile extends StatelessWidget {
                 ? Column(
                     children: [
                       for (final area in areas) ...[
-                        const Divider(height: 1, color: AppColors.border),
+                        Divider(height: 1, color: AppColors.border),
                         _CountryRow(area: area),
                       ],
                     ],
@@ -388,14 +392,14 @@ class _CountryRow extends StatelessWidget {
               Container(
                 width: 6,
                 height: 6,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppColors.orange,
                   shape: BoxShape.circle,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(child: Text(area, style: AppTextStyles.body)),
-              const Icon(
+              Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 12,
                 color: AppColors.muted,
@@ -446,11 +450,11 @@ class _RecentlyViewedSectionState extends State<_RecentlyViewedSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(24, 0, 24, 14),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 14),
           child: SectionHeading(
             eyebrow: 'Jump back in',
-            title: 'RECENTLY\nVIEWED',
+            title: 'Recently\nviewed',
           ),
         ),
         SizedBox(

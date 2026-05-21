@@ -40,7 +40,7 @@ class AppDrawer extends StatelessWidget {
                         margin: const EdgeInsets.only(bottom: 6),
                         width: 10,
                         height: 10,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: AppColors.orange,
                           shape: BoxShape.circle,
                         ),
@@ -58,7 +58,7 @@ class AppDrawer extends StatelessWidget {
                 ],
               ),
             ),
-            const Divider(height: 1, color: AppColors.border),
+            Divider(height: 1, color: AppColors.border),
             const SizedBox(height: AppTheme.spaceSm),
             _DrawerItem(
               icon: Icons.grid_view_rounded,
@@ -85,7 +85,7 @@ class AppDrawer extends StatelessWidget {
               },
             ),
             const Spacer(),
-            const Divider(height: 1, color: AppColors.border),
+            Divider(height: 1, color: AppColors.border),
             _DrawerItem(
               icon: Icons.info_outline_rounded,
               label: 'About TerraBite',

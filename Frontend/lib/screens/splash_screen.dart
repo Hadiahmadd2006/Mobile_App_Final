@@ -75,14 +75,14 @@ class _SplashScreenState extends State<SplashScreen>
                       children: [
                         Text(
                           'TerraBite',
-                          style: AppTextStyles.hero.copyWith(fontSize: 46),
+                          style: AppTextStyles.brand(46),
                         ),
                         const SizedBox(width: 8),
                         Container(
                           margin: const EdgeInsets.only(bottom: 12),
                           width: 14,
                           height: 14,
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             color: AppColors.orange,
                             shape: BoxShape.circle,
                           ),

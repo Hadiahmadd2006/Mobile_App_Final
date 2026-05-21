@@ -148,12 +148,14 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _saving ? null : _save,
           icon: _saving
-              ? const SizedBox(
+              ? SizedBox(
                   width: 18,
                   height: 18,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.cream),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.textOnDark,
+                    ),
                   ),
                 )
               : const Icon(Icons.check_rounded),
@@ -165,14 +167,14 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
             future: _loadFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const LoadingView();
+                return LoadingView();
               }
               if (snapshot.hasError) {
                 return ErrorView(message: snapshot.error.toString());
               }
               final meal = snapshot.data;
               if (meal == null) {
-                return const ErrorView(
+                return ErrorView(
                   message: 'This recipe is no longer in your favorites.',
                   icon: Icons.bookmark_remove_outlined,
                 );

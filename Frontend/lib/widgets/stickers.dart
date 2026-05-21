@@ -6,16 +6,16 @@ import '../theme/app_text_styles.dart';
 /// A SPLIT star sticker — a ten-point star badge with centered text.
 class StarSticker extends StatelessWidget {
   final String text;
-  final Color background;
-  final Color foreground;
+  final Color? background;
+  final Color? foreground;
   final double size;
   final double rotation;
 
   const StarSticker({
     super.key,
     required this.text,
-    this.background = AppColors.orange,
-    this.foreground = AppColors.cream,
+    this.background,
+    this.foreground,
     this.size = 96,
     this.rotation = -0.14,
   });
@@ -29,13 +29,13 @@ class StarSticker extends StatelessWidget {
         child: Container(
           width: size,
           height: size,
-          color: background,
+          color: background ?? AppColors.orange,
           alignment: Alignment.center,
           child: Text(
             text.toUpperCase(),
             textAlign: TextAlign.center,
             style: AppTextStyles.tag.copyWith(
-              color: foreground,
+              color: foreground ?? AppColors.textOnDark,
               fontSize: size * 0.115,
               height: 1.25,
             ),
@@ -78,16 +78,18 @@ class _StarClipper extends CustomClipper<Path> {
 /// A SPLIT pill sticker — a rounded, optionally outlined label tag.
 class PillSticker extends StatelessWidget {
   final String text;
-  final Color background;
-  final Color foreground;
+  final Color? background;
+  final Color? foreground;
+  final Color? borderColor;
   final bool bordered;
   final double rotation;
 
   const PillSticker({
     super.key,
     required this.text,
-    this.background = AppColors.lime,
-    this.foreground = AppColors.espresso,
+    this.background,
+    this.foreground,
+    this.borderColor,
     this.bordered = true,
     this.rotation = 0,
   });
@@ -99,16 +101,19 @@ class PillSticker extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
         decoration: BoxDecoration(
-          color: background,
+          color: background ?? AppColors.lime,
           borderRadius: BorderRadius.circular(999),
           border: bordered
-              ? Border.all(color: AppColors.espresso, width: 2)
+              ? Border.all(
+                  color: borderColor ?? AppColors.espresso,
+                  width: 2,
+                )
               : null,
         ),
         child: Text(
           text.toUpperCase(),
           style: AppTextStyles.tag.copyWith(
-            color: foreground,
+            color: foreground ?? AppColors.espresso,
             fontSize: 12,
             letterSpacing: 0.8,
           ),

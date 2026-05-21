@@ -5,9 +5,9 @@ import '../theme/app_colors.dart';
 /// A slowly rotating sunburst — the spinning radial backdrop from SPLIT.
 class Sunburst extends StatefulWidget {
   final double size;
-  final Color color;
+  final Color? color;
 
-  const Sunburst({super.key, required this.size, this.color = AppColors.orange});
+  const Sunburst({super.key, required this.size, this.color});
 
   @override
   State<Sunburst> createState() => _SunburstState();
@@ -35,9 +35,10 @@ class _SunburstState extends State<Sunburst>
   }
 
   List<Color> get _colors {
+    final rayColor = widget.color ?? AppColors.orange;
     final list = <Color>[];
     for (var i = 0; i < _rays; i++) {
-      final c = i.isEven ? widget.color : const Color(0x00000000);
+      final c = i.isEven ? rayColor : const Color(0x00000000);
       list
         ..add(c)
         ..add(c);

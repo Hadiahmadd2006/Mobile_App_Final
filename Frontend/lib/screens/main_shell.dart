@@ -93,10 +93,10 @@ class _LiquidGlassTabBar extends StatelessWidget {
             child: Container(
               height: 60,
               decoration: BoxDecoration(
-                color: AppColors.espresso.withValues(alpha: 0.9),
+                color: AppColors.surfaceDark.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(26),
                 border: Border.all(
-                  color: AppColors.cream.withValues(alpha: 0.1),
+                  color: AppColors.textOnDark.withValues(alpha: 0.1),
                   width: 0.8,
                 ),
               ),
@@ -183,7 +183,7 @@ class _TabButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
               color: selected
-                  ? AppColors.cream.withValues(alpha: 0.13)
+                  ? AppColors.textOnDark.withValues(alpha: 0.13)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
             ),
@@ -192,7 +192,7 @@ class _TabButton extends StatelessWidget {
               size: 22,
               color: selected
                   ? AppColors.orange
-                  : AppColors.cream.withValues(alpha: 0.55),
+                  : AppColors.textOnDark.withValues(alpha: 0.55),
             ),
           ),
           const SizedBox(height: 3),
@@ -202,8 +202,8 @@ class _TabButton extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w700,
               color: selected
-                  ? AppColors.cream
-                  : AppColors.cream.withValues(alpha: 0.5),
+                  ? AppColors.textOnDark
+                  : AppColors.textOnDark.withValues(alpha: 0.5),
             ),
           ),
         ],
@@ -222,7 +222,7 @@ class _SurpriseTabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tint = AppColors.cream.withValues(alpha: 0.55);
+    final tint = AppColors.textOnDark.withValues(alpha: 0.55);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
@@ -251,7 +251,7 @@ class _SurpriseTabButton extends StatelessWidget {
             style: AppTextStyles.label.copyWith(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: AppColors.cream.withValues(alpha: 0.5),
+              color: AppColors.textOnDark.withValues(alpha: 0.5),
             ),
           ),
         ],

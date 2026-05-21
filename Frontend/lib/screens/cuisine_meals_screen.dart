@@ -6,6 +6,7 @@ import '../models/meal.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/empty_view.dart';
 import '../widgets/error_view.dart';
+import '../widgets/in_page_search_app_bar.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/meal_card.dart';
 import '../widgets/pill_tag.dart';
@@ -22,6 +23,15 @@ class CuisineMealsScreen extends StatefulWidget {
 
 class _CuisineMealsScreenState extends State<CuisineMealsScreen> {
   Future<List<Meal>>? _mealsFuture;
+  String _query = '';
+
+  List<Meal> _applyQuery(List<Meal> meals) {
+    final query = _query.trim().toLowerCase();
+    if (query.isEmpty) return meals;
+    return meals
+        .where((meal) => meal.name.toLowerCase().contains(query))
+        .toList();
+  }
 
   @override
   void didChangeDependencies() {
@@ -38,8 +48,10 @@ class _CuisineMealsScreenState extends State<CuisineMealsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.area),
+      appBar: InPageSearchAppBar(
+        title: widget.area,
+        hint: 'Search ${widget.area} dishes…',
+        onChanged: (query) => setState(() => _query = query),
         actions: [
           IconButton(
             tooltip: 'Refresh',
@@ -54,7 +66,7 @@ class _CuisineMealsScreenState extends State<CuisineMealsScreen> {
           future: _mealsFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const LoadingView(message: 'Plating dishes');
+              return LoadingView(message: 'Plating dishes');
             }
             if (snapshot.hasError) {
               return ErrorView(
@@ -64,13 +76,21 @@ class _CuisineMealsScreenState extends State<CuisineMealsScreen> {
             }
             final meals = snapshot.data ?? const [];
             if (meals.isEmpty) {
-              return const EmptyView(
+              return EmptyView(
                 icon: Icons.no_meals_rounded,
                 title: 'No dishes here',
                 message: 'This cuisine has no recipes yet. Try another.',
               );
             }
-            return _CuisineGrid(meals: meals, area: widget.area);
+            final filtered = _applyQuery(meals);
+            if (filtered.isEmpty) {
+              return EmptyView(
+                icon: Icons.search_off_rounded,
+                title: 'No matches',
+                message: 'No ${widget.area} dishes match "$_query".',
+              );
+            }
+            return _CuisineGrid(meals: filtered, area: widget.area);
           },
         ),
       ),

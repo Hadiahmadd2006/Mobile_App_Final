@@ -30,10 +30,10 @@ class NotFoundScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                     border: Border.all(color: AppColors.espresso, width: 2),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.restaurant_menu_rounded,
                     size: 46,
-                    color: AppColors.cream,
+                    color: AppColors.textOnDark,
                   ),
                 ),
                 const SizedBox(height: AppTheme.spaceLg),

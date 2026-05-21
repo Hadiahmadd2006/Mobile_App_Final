@@ -85,16 +85,16 @@ class _LoadingScaffold extends StatelessWidget {
         SliverAppBar(
           pinned: true,
           expandedHeight: 260,
-          backgroundColor: AppColors.espresso,
-          foregroundColor: AppColors.cream,
+          backgroundColor: AppColors.surfaceDark,
+          foregroundColor: AppColors.textOnDark,
           flexibleSpace: FlexibleSpaceBar(
             background: previewThumb != null
                 ? NetworkImageBox(url: previewThumb!)
-                : const ColoredBox(color: AppColors.surfaceSunk),
+                : ColoredBox(color: AppColors.surfaceSunk),
           ),
           title: Text(
             previewName ?? 'Loading…',
-            style: AppTextStyles.subheading.copyWith(color: AppColors.cream),
+            style: AppTextStyles.subheading.copyWith(color: AppColors.textOnDark),
           ),
         ),
         const SliverFillRemaining(
@@ -230,8 +230,8 @@ class _DetailContentState extends State<_DetailContent> {
         SliverAppBar(
           pinned: true,
           expandedHeight: 300,
-          backgroundColor: AppColors.espresso,
-          foregroundColor: AppColors.cream,
+          backgroundColor: AppColors.surfaceDark,
+          foregroundColor: AppColors.textOnDark,
           flexibleSpace: FlexibleSpaceBar(
             background: Stack(
               fit: StackFit.expand,
@@ -255,7 +255,7 @@ class _DetailContentState extends State<_DetailContent> {
             ),
             title: Text(
               detail.name,
-              style: AppTextStyles.subheading.copyWith(color: AppColors.cream),
+              style: AppTextStyles.subheading.copyWith(color: AppColors.textOnDark),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -279,7 +279,7 @@ class _DetailContentState extends State<_DetailContent> {
                   const SizedBox(height: 14),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.public_rounded,
                         size: 16,
                         color: AppColors.muted,
@@ -287,7 +287,7 @@ class _DetailContentState extends State<_DetailContent> {
                       const SizedBox(width: 6),
                       Text(detail.area, style: AppTextStyles.label),
                       const SizedBox(width: 18),
-                      const Icon(
+                      Icon(
                         Icons.timer_outlined,
                         size: 16,
                         color: AppColors.muted,
@@ -314,7 +314,7 @@ class _DetailContentState extends State<_DetailContent> {
                   ],
                   const SizedBox(height: 28),
                   if (detail.tags.isNotEmpty) ...[
-                    const _SectionLabel(label: 'TAGS'),
+                    _SectionLabel(label: 'TAGS'),
                     const SizedBox(height: 12),
                     Wrap(
                       spacing: 8,
@@ -330,15 +330,15 @@ class _DetailContentState extends State<_DetailContent> {
                     ),
                     const SizedBox(height: 28),
                   ],
-                  const _SectionLabel(label: 'INGREDIENTS'),
+                  _SectionLabel(label: 'INGREDIENTS'),
                   const SizedBox(height: 12),
                   _IngredientsList(detail: detail),
                   const SizedBox(height: 28),
-                  const _SectionLabel(label: 'INSTRUCTIONS'),
+                  _SectionLabel(label: 'INSTRUCTIONS'),
                   const SizedBox(height: 12),
                   Text(detail.instructions, style: AppTextStyles.body),
                   const SizedBox(height: 28),
-                  const _SectionLabel(label: 'YOUR NOTES'),
+                  _SectionLabel(label: 'YOUR NOTES'),
                   const SizedBox(height: 12),
                   TextField(
                     enabled: false,
@@ -505,7 +505,7 @@ class _IngredientsList extends StatelessWidget {
                   Container(
                     width: 7,
                     height: 7,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: AppColors.orange,
                       shape: BoxShape.circle,
                     ),
@@ -535,7 +535,7 @@ class _IngredientsList extends StatelessWidget {
               ),
             ),
             if (i < detail.ingredients.length - 1)
-              const Divider(
+              Divider(
                 height: 1,
                 indent: AppTheme.spaceMd,
                 endIndent: AppTheme.spaceMd,
