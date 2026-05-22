@@ -84,6 +84,15 @@ class AppDrawer extends StatelessWidget {
                 context.go(AppRoutes.favorites);
               },
             ),
+            // TEMPORARY: preview the 404 screen via an unmatched route.
+            _DrawerItem(
+              icon: Icons.error_outline_rounded,
+              label: 'Preview 404',
+              onTap: () {
+                Navigator.of(context).pop();
+                context.go('/this-route-does-not-exist');
+              },
+            ),
             const Spacer(),
             Divider(height: 1, color: AppColors.border),
             _DrawerItem(

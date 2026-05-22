@@ -74,6 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.refresh_rounded),
             onPressed: _refresh,
           ),
+          _GoProButton(),
         ],
       ),
       body: SafeArea(
@@ -198,6 +199,7 @@ class _HomeContent extends StatelessWidget {
         ),
         SliverToBoxAdapter(child: _CuisineSection()),
         SliverToBoxAdapter(child: _RecentlyViewedSection()),
+        SliverToBoxAdapter(child: _GoProSection()),
       ],
     );
   }
@@ -510,6 +512,155 @@ class _RecentCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// A compact "Go Pro" pill in the Home app bar — free tier only.
+class _GoProButton extends StatelessWidget {
+  const _GoProButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final pro = AppScope.of(context).pro;
+    return ListenableBuilder(
+      listenable: pro,
+      builder: (context, _) {
+        if (pro.isPro) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: Center(
+            child: GestureDetector(
+              onTap: () => context.go('/pro'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.orange,
+                  borderRadius: BorderRadius.circular(50),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.star_rounded,
+                      size: 14,
+                      color: AppColors.textOnDark,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Go Pro',
+                      style: AppTextStyles.label.copyWith(
+                        color: AppColors.textOnDark,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// The detailed "Go Pro" promo at the bottom of Home — free tier only.
+class _GoProSection extends StatelessWidget {
+  const _GoProSection();
+
+  static const List<(IconData, String)> _details = [
+    (Icons.star_rounded, 'Michelin Collection'),
+    (Icons.calendar_month_rounded, 'Meal Planner'),
+    (Icons.local_fire_department_rounded, 'Cooking Mode'),
+    (Icons.menu_book_rounded, 'My Cookbook export'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final pro = AppScope.of(context).pro;
+    return ListenableBuilder(
+      listenable: pro,
+      builder: (context, _) {
+        if (pro.isPro) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 36),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => context.go('/pro'),
+              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+              child: Container(
+                padding: const EdgeInsets.all(22),
+                decoration: AppTheme.darkPanel,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'TERRABITE PRO',
+                      style: AppTextStyles.eyebrow.copyWith(
+                        color: AppColors.lime,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Go Pro',
+                      style: AppTextStyles.display.copyWith(
+                        color: AppColors.textOnDark,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Michelin-star recipes and a kit of pro cooking tools.',
+                      style: AppTextStyles.bodyMuted.copyWith(
+                        color: AppColors.textOnDark.withValues(alpha: 0.72),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    for (final detail in _details) ...[
+                      Row(
+                        children: [
+                          Icon(detail.$1, size: 16, color: AppColors.lime),
+                          const SizedBox(width: 10),
+                          Text(
+                            detail.$2,
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textOnDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 9),
+                    ],
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Text(
+                          'Explore Pro',
+                          style: AppTextStyles.button.copyWith(
+                            color: AppColors.orange,
+                            fontSize: 15,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 18,
+                          color: AppColors.orange,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

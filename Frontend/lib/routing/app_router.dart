@@ -8,7 +8,10 @@ import '../screens/favorites_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/main_shell.dart';
 import '../screens/meal_detail_screen.dart';
+import '../screens/michelin_collection_screen.dart';
+import '../screens/michelin_recipe_screen.dart';
 import '../screens/not_found_screen.dart';
+import '../screens/pro_screen.dart';
 import '../screens/recently_viewed_screen.dart';
 import '../screens/search_screen.dart';
 import '../screens/splash_screen.dart';
@@ -81,6 +84,30 @@ class AppRouter {
                   path: AppRoutes.search,
                   name: 'search',
                   builder: (context, state) => SearchScreen(),
+                ),
+              ],
+            ),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/pro',
+                  name: 'pro',
+                  builder: (context, state) => const ProScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'collection',
+                      name: 'michelinCollection',
+                      builder: (context, state) =>
+                          const MichelinCollectionScreen(),
+                    ),
+                    GoRoute(
+                      path: 'recipe/:id',
+                      name: 'michelinRecipe',
+                      builder: (context, state) => MichelinRecipeScreen(
+                        recipeId: state.pathParameters['id'] ?? '',
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

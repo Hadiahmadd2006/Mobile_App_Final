@@ -6,6 +6,7 @@ import 'routing/app_router.dart';
 import 'services/favorites_repository.dart';
 import 'services/in_memory_favorites_repository.dart';
 import 'services/meal_api_service.dart';
+import 'services/pro_controller.dart';
 import 'services/recently_viewed_repository.dart';
 import 'theme/app_colors.dart';
 import 'theme/app_theme.dart';
@@ -19,13 +20,16 @@ Future<void> main() async {
         ? InMemoryFavoritesRepository()
         : SqfliteFavoritesRepository();
     final recentlyViewed = RecentlyViewedRepository();
+    final pro = ProController();
     await favorites.init().timeout(const Duration(seconds: 15));
     await recentlyViewed.init();
+    await pro.load();
     runApp(
       TerraBiteApp(
         api: api,
         favorites: favorites,
         recentlyViewed: recentlyViewed,
+        pro: pro,
       ),
     );
   } catch (error, stack) {
@@ -38,12 +42,14 @@ class TerraBiteApp extends StatefulWidget {
   final MealApiService api;
   final FavoritesRepository favorites;
   final RecentlyViewedRepository recentlyViewed;
+  final ProController pro;
 
   const TerraBiteApp({
     super.key,
     required this.api,
     required this.favorites,
     required this.recentlyViewed,
+    required this.pro,
   });
 
   @override
@@ -83,6 +89,7 @@ class _TerraBiteAppState extends State<TerraBiteApp>
       api: widget.api,
       favorites: widget.favorites,
       recentlyViewed: widget.recentlyViewed,
+      pro: widget.pro,
       child: MaterialApp.router(
         title: 'TerraBite',
         debugShowCheckedModeBanner: false,
