@@ -1,14 +1,107 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:local_auth/local_auth.dart';
 
 import '../app_scope.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../theme/app_theme.dart';
+import 'pro_intro_screen.dart';
 
 /// The Pro tab: a paywall on the free tier, or the Pro hub once unlocked.
-class ProScreen extends StatelessWidget {
+class ProScreen extends StatefulWidget {
   const ProScreen({super.key});
+
+  @override
+  State<ProScreen> createState() => _ProScreenState();
+}
+
+class _ProScreenState extends State<ProScreen> {
+  bool _introScheduled = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _maybeShowIntro();
+  }
+
+  /// First-time celebratory intro — shown once when a free user lands on
+  /// the Pro tab. After dismissing they see the regular paywall.
+  void _maybeShowIntro() {
+    if (_introScheduled) return;
+    _introScheduled = true;
+    final pro = AppScope.of(context).pro;
+    if (pro.isPro || pro.seenIntro) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => const ProIntroScreen(),
+        ),
+      );
+      if (!mounted) return;
+      await pro.markIntroSeen();
+    });
+  }
+
+  Future<void> _goProWithBiometrics() async {
+    final pro = AppScope.of(context).pro;
+    final messenger = ScaffoldMessenger.of(context);
+    final auth = LocalAuthentication();
+
+    // Try a biometric-only prompt first (Face ID / Touch ID). If the
+    // device has no biometrics enrolled we fall back to the device
+    // passcode, so the demo still completes on simulators or older
+    // phones.
+    bool authenticated = false;
+    try {
+      authenticated = await auth.authenticate(
+        localizedReason: 'Confirm your purchase of TerraBite Pro',
+        options: const AuthenticationOptions(
+          biometricOnly: false,
+          stickyAuth: true,
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text("Couldn't run biometrics: $e")),
+      );
+      return;
+    }
+
+    if (!authenticated) return;
+    if (!mounted) return;
+
+    // Fake the payment processing beat so the unlock feels deliberate.
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text('Processing payment…'),
+        duration: Duration(milliseconds: 800),
+      ),
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 900));
+    if (!mounted) return;
+
+    await pro.goPro();
+    if (!mounted) return;
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Welcome to TerraBite Pro!')),
+    );
+  }
+
+  Future<void> _cancelWithConfirm() async {
+    final pro = AppScope.of(context).pro;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => _CancelDialog(),
+    );
+    if (confirmed == true) {
+      await pro.restoreToFree();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,8 +121,89 @@ class ProScreen extends StatelessWidget {
         child: ListenableBuilder(
           listenable: pro,
           builder: (context, _) => pro.isPro
-              ? _ProHub(onCancel: pro.restoreToFree)
-              : _Paywall(onGoPro: pro.goPro),
+              ? _ProHub(onCancel: _cancelWithConfirm)
+              : _Paywall(onGoPro: _goProWithBiometrics),
+        ),
+      ),
+    );
+  }
+}
+
+/// Confirmation dialog shown when a Pro user taps "Cancel subscription".
+class _CancelDialog extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.danger.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.warning_amber_rounded,
+                    color: AppColors.danger,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Cancel subscription?',
+                    style: AppTextStyles.subheading.copyWith(fontSize: 18),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Text(
+              'Are you sure you want to cancel your TerraBite Pro '
+              'subscription? You\'ll lose access to Michelin recipes, '
+              'Chef Spotlights, the Meal Planner, Cooking Mode, and the '
+              'Cookbook PDF export.',
+              style: AppTextStyles.body,
+            ),
+            const SizedBox(height: 22),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: const Text('No'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.danger,
+                      foregroundColor: AppColors.textOnDark,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: const Text('Yes, cancel'),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -357,25 +531,24 @@ const List<ProSection> kProSections = [
     icon: Icons.person_rounded,
     title: 'Chef Spotlights',
     subtitle: 'Recipes grouped by legendary chefs.',
+    route: '/pro/spotlights',
   ),
   ProSection(
     icon: Icons.local_fire_department_rounded,
     title: 'Cooking Mode',
     subtitle: 'Full-screen, step-by-step, screen stays awake.',
-  ),
-  ProSection(
-    icon: Icons.restaurant_menu_rounded,
-    title: 'Tasting-Menu Builder',
-    subtitle: 'Compose a multi-course menu for a dinner party.',
+    route: '/pro/cook',
   ),
   ProSection(
     icon: Icons.calendar_month_rounded,
     title: 'Meal Planner',
     subtitle: 'Plan your recipes across the week.',
+    route: '/pro/planner',
   ),
   ProSection(
     icon: Icons.menu_book_rounded,
     title: 'My Cookbook Export',
     subtitle: 'Export your favorites as a printable PDF.',
+    route: '/pro/cookbook',
   ),
 ];

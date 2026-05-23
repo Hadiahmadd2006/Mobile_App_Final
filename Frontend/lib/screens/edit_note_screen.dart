@@ -55,15 +55,14 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
 
   String? _validateTitle(String? value) {
     final trimmed = value?.trim() ?? '';
-    if (trimmed.isEmpty) return 'Title is required.';
+    // Title is optional — only validate the upper bound so you can save
+    // a body-only note.
     if (trimmed.length > 60) return 'Keep the title under 60 characters.';
     return null;
   }
 
   String? _validateBody(String? value) {
-    final trimmed = value?.trim() ?? '';
-    if (trimmed.isEmpty) return 'Note body is required.';
-    if (trimmed.length < 10) return 'Add at least 10 characters.';
+    // Body is also optional. The save handler will just skip empty saves.
     return null;
   }
 
@@ -287,8 +286,7 @@ class _NoteForm extends StatelessWidget {
               style: AppTextStyles.body,
               autovalidateMode: AutovalidateMode.onUserInteraction,
               decoration: const InputDecoration(
-                hintText:
-                    'Cooking observations, swaps, ratings… (min 10 characters)',
+                hintText: 'Cooking observations, swaps, ratings…',
                 alignLabelWithHint: true,
               ),
             ),

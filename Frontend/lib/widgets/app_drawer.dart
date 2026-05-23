@@ -36,9 +36,10 @@ class AppDrawer extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('TerraBite',
-                          style:
-                              AppTextStyles.heading.copyWith(fontSize: 26)),
+                      Text(
+                        'TerraBite',
+                        style: AppTextStyles.heading.copyWith(fontSize: 26),
+                      ),
                       const SizedBox(width: 6),
                       Container(
                         margin: const EdgeInsets.only(bottom: 6),
@@ -52,16 +53,21 @@ class AppDrawer extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text('PREMIUM RECIPES · NO SHORTCUTS',
-                      style: AppTextStyles.eyebrow.copyWith(
-                          color: AppColors.muted, fontSize: 10)),
+                  Text(
+                    'PREMIUM RECIPES · NO SHORTCUTS',
+                    style: AppTextStyles.eyebrow.copyWith(
+                      color: AppColors.muted,
+                      fontSize: 10,
+                    ),
+                  ),
                 ],
               ),
             ),
             if (user != null) ...[
               Container(
                 margin: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spaceLg),
+                  horizontal: AppTheme.spaceLg,
+                ),
                 padding: const EdgeInsets.all(14),
                 decoration: AppTheme.cardSoft,
                 child: Row(
@@ -88,12 +94,15 @@ class AppDrawer extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(user.displayName,
-                              style: AppTextStyles.subheading,
-                              overflow: TextOverflow.ellipsis),
+                          Text(
+                            user.displayName,
+                            style: AppTextStyles.subheading,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           const SizedBox(height: 1),
                           Text(
-                            '${user.isAdmin ? "Admin" : "User"} · ${user.isPro ? "Pro" : "Free"}',
+                            '${user.isAdmin ? "Admin" : "User"} · '
+                            '${user.isPro ? "Pro" : "Free"}',
                             style: AppTextStyles.label,
                           ),
                         ],
@@ -128,6 +137,14 @@ class AppDrawer extends StatelessWidget {
               onTap: () {
                 Navigator.of(context).pop();
                 context.go(AppRoutes.favorites);
+              },
+            ),
+            _DrawerItem(
+              icon: Icons.settings_outlined,
+              label: 'Settings',
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push(AppRoutes.settings);
               },
             ),
             if (auth.isAdmin)
@@ -217,8 +234,7 @@ class _DrawerItem extends StatelessWidget {
         ),
       ),
       onTap: onTap,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
+      contentPadding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
     );
   }
 }

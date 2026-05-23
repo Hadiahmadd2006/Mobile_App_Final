@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../app_scope.dart';
+import '../data/pro_meals.dart';
 import '../models/meal.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
@@ -12,6 +13,7 @@ import '../widgets/empty_view.dart';
 import '../widgets/in_page_search_app_bar.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/network_image_box.dart';
+import '../widgets/pro_lock_overlay.dart';
 
 /// Full history of recipes the user has opened — newest first, stacked.
 class RecentlyViewedScreen extends StatefulWidget {
@@ -152,9 +154,21 @@ class _RecentRow extends StatelessWidget {
               SizedBox(
                 width: 62,
                 height: 62,
-                child: NetworkImageBox(
-                  url: meal.thumbnailUrl,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    NetworkImageBox(
+                      url: meal.thumbnailUrl,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                    ),
+                    if (isMealPro(meal.id) &&
+                        !AppScope.of(context).pro.isPro)
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: ProLockOverlay(size: 18),
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(width: 14),

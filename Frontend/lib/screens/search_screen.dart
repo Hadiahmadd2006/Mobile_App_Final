@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../app_scope.dart';
+import '../data/pro_meals.dart';
 import '../models/meal.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
@@ -12,6 +13,7 @@ import '../widgets/empty_view.dart';
 import '../widgets/error_view.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/network_image_box.dart';
+import '../widgets/pro_lock_overlay.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -167,8 +169,10 @@ class _SearchScreenState extends State<SearchScreen> {
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final meal = results[index];
+        final isPro = AppScope.of(context).pro.isPro;
         return _SearchResultTile(
           meal: meal,
+          locked: isMealPro(meal.id) && !isPro,
           onTap: () => context.push('/detail/${meal.id}', extra: meal),
         );
       },
@@ -179,8 +183,13 @@ class _SearchScreenState extends State<SearchScreen> {
 class _SearchResultTile extends StatelessWidget {
   final Meal meal;
   final VoidCallback onTap;
+  final bool locked;
 
-  const _SearchResultTile({required this.meal, required this.onTap});
+  const _SearchResultTile({
+    required this.meal,
+    required this.onTap,
+    this.locked = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -197,9 +206,20 @@ class _SearchResultTile extends StatelessWidget {
               SizedBox(
                 width: 62,
                 height: 62,
-                child: NetworkImageBox(
-                  url: meal.thumbnailUrl,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    NetworkImageBox(
+                      url: meal.thumbnailUrl,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                    ),
+                    if (locked)
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: ProLockOverlay(size: 18),
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(width: 14),

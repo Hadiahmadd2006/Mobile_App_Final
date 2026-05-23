@@ -6,6 +6,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../theme/app_theme.dart';
 import '../widgets/network_image_box.dart';
+import 'cooking_mode_screen.dart';
 
 /// Detail view for a curated Michelin (Pro) recipe.
 class MichelinRecipeScreen extends StatelessWidget {
@@ -42,7 +43,12 @@ class _RecipeContent extends StatelessWidget {
           pinned: true,
           expandedHeight: 300,
           backgroundColor: AppColors.surfaceDark,
-          foregroundColor: AppColors.textOnDark,
+          foregroundColor: Colors.white,
+          iconTheme: const IconThemeData(color: Colors.white),
+          actionsIconTheme: const IconThemeData(color: Colors.white),
+          leading: _HeroBackButton(
+            onPressed: () => Navigator.of(context).maybePop(),
+          ),
           flexibleSpace: FlexibleSpaceBar(
             background: Stack(
               fit: StackFit.expand,
@@ -108,6 +114,35 @@ class _RecipeContent extends StatelessWidget {
                           style: AppTextStyles.bodyMuted,
                         ),
                       ],
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => CookingModeScreen(
+                              title: recipe.name,
+                              steps: recipe.steps,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.local_fire_department_rounded,
+                        size: 20,
+                      ),
+                      label: Text(
+                        'Start Cooking Mode',
+                        style: AppTextStyles.button.copyWith(fontSize: 15),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.orange,
+                        foregroundColor: AppColors.textOnDark,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 28),
@@ -219,6 +254,38 @@ class _Label extends StatelessWidget {
         const SizedBox(width: 10),
         Text(label, style: AppTextStyles.eyebrow),
       ],
+    );
+  }
+}
+
+/// Back-arrow with a soft dark backdrop so it stays legible on any photo
+/// hero, regardless of light/dark mode or image tonality.
+class _HeroBackButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const _HeroBackButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, top: 4, bottom: 4),
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.35),
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onPressed,
+          child: const SizedBox(
+            width: 38,
+            height: 38,
+            child: Icon(
+              Icons.arrow_back_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

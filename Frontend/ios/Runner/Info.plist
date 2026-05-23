@@ -68,5 +68,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSFaceIDUsageDescription</key>
+	<string>TerraBite uses Face ID to confirm your purchase of TerraBite Pro.</string>
 </dict>
 </plist>

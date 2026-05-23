@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../app_scope.dart';
+import '../data/pro_meals.dart';
 import '../models/meal.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/empty_view.dart';
@@ -160,8 +161,10 @@ class _MealsGrid extends StatelessWidget {
             ),
             delegate: SliverChildBuilderDelegate((context, index) {
               final meal = meals[index];
+              final isPro = AppScope.of(context).pro.isPro;
               return MealCard(
                 meal: meal,
+                locked: isMealPro(meal.id) && !isPro,
                 onTap: () => context.push('/detail/${meal.id}', extra: meal),
               );
             }, childCount: meals.length),

@@ -7,18 +7,23 @@ import '../screens/auth/login_screen.dart';
 import '../screens/auth/signup_screen.dart';
 import '../screens/auth/welcome_screen.dart';
 import '../screens/category_meals_screen.dart';
+import '../screens/chef_spotlights_screen.dart';
+import '../screens/cookbook_export_screen.dart';
+import '../screens/cooking_mode_launcher_screen.dart';
 import '../screens/cuisine_meals_screen.dart';
 import '../screens/edit_note_screen.dart';
 import '../screens/favorites_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/main_shell.dart';
 import '../screens/meal_detail_screen.dart';
+import '../screens/meal_planner_screen.dart';
 import '../screens/michelin_collection_screen.dart';
 import '../screens/michelin_recipe_screen.dart';
 import '../screens/not_found_screen.dart';
 import '../screens/pro_screen.dart';
 import '../screens/recently_viewed_screen.dart';
 import '../screens/search_screen.dart';
+import '../screens/settings_screen.dart';
 import '../screens/splash_screen.dart';
 import '../services/auth_repository.dart';
 
@@ -46,6 +51,9 @@ class AppRoutes {
   // Admin
   static const String adminBase = '/admin';
   static const String adminNewUser = '/admin/new';
+
+  // Settings
+  static const String settings = '/settings';
 }
 
 class AppRouter {
@@ -182,6 +190,29 @@ class AppRouter {
                           const MichelinCollectionScreen(),
                     ),
                     GoRoute(
+                      path: 'spotlights',
+                      name: 'chefSpotlights',
+                      builder: (context, state) =>
+                          const ChefSpotlightsScreen(),
+                    ),
+                    GoRoute(
+                      path: 'cook',
+                      name: 'cookingModeLauncher',
+                      builder: (context, state) =>
+                          const CookingModeLauncherScreen(),
+                    ),
+                    GoRoute(
+                      path: 'planner',
+                      name: 'mealPlanner',
+                      builder: (context, state) => const MealPlannerScreen(),
+                    ),
+                    GoRoute(
+                      path: 'cookbook',
+                      name: 'cookbookExport',
+                      builder: (context, state) =>
+                          const CookbookExportScreen(),
+                    ),
+                    GoRoute(
                       path: 'recipe/:id',
                       name: 'michelinRecipe',
                       builder: (context, state) => MichelinRecipeScreen(
@@ -228,6 +259,11 @@ class AppRouter {
             final id = state.pathParameters['id'] ?? '';
             return EditNoteScreen(mealId: id);
           },
+        ),
+        GoRoute(
+          path: AppRoutes.settings,
+          name: 'settings',
+          builder: (context, state) => const SettingsScreen(),
         ),
       ],
     );

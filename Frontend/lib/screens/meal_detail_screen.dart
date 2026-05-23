@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../app_scope.dart';
+import '../data/pro_meals.dart';
 import '../models/favorite_meal.dart';
 import '../models/meal.dart';
 import '../models/meal_detail.dart';
@@ -14,6 +15,7 @@ import '../widgets/error_view.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/network_image_box.dart';
 import '../widgets/pill_tag.dart';
+import 'cooking_mode_screen.dart';
 
 class MealDetailScreen extends StatefulWidget {
   final String mealId;
@@ -86,7 +88,12 @@ class _LoadingScaffold extends StatelessWidget {
           pinned: true,
           expandedHeight: 260,
           backgroundColor: AppColors.surfaceDark,
-          foregroundColor: AppColors.textOnDark,
+          foregroundColor: Colors.white,
+          iconTheme: const IconThemeData(color: Colors.white),
+          actionsIconTheme: const IconThemeData(color: Colors.white),
+          leading: _HeroBackButton(
+            onPressed: () => Navigator.of(context).maybePop(),
+          ),
           flexibleSpace: FlexibleSpaceBar(
             background: previewThumb != null
                 ? NetworkImageBox(url: previewThumb!)
@@ -231,7 +238,12 @@ class _DetailContentState extends State<_DetailContent> {
           pinned: true,
           expandedHeight: 300,
           backgroundColor: AppColors.surfaceDark,
-          foregroundColor: AppColors.textOnDark,
+          foregroundColor: Colors.white,
+          iconTheme: const IconThemeData(color: Colors.white),
+          actionsIconTheme: const IconThemeData(color: Colors.white),
+          leading: _HeroBackButton(
+            onPressed: () => Navigator.of(context).maybePop(),
+          ),
           flexibleSpace: FlexibleSpaceBar(
             background: Stack(
               fit: StackFit.expand,
@@ -297,74 +309,70 @@ class _DetailContentState extends State<_DetailContent> {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  _ActionBar(
-                    isFavorite: _isFavorite,
-                    busy: _favoriteLoading,
-                    onToggleFavorite: _toggleFavorite,
-                    onShare: _share,
-                  ),
-                  if (detail.youtubeUrl != null ||
-                      detail.sourceUrl != null) ...[
-                    const SizedBox(height: 10),
-                    _RecipeLinks(
-                      youtubeUrl: detail.youtubeUrl,
-                      sourceUrl: detail.sourceUrl,
-                      onOpen: _openUrl,
-                    ),
-                  ],
-                  const SizedBox(height: 28),
-                  if (detail.tags.isNotEmpty) ...[
-                    _SectionLabel(label: 'TAGS'),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: detail.tags
-                          .map(
-                            (t) => PillTag(
-                              label: t,
-                              variant: PillTagVariant.ghostDark,
+                  ListenableBuilder(
+                    listenable: AppScope.of(context).pro,
+                    builder: (context, _) {
+                      final isPro = AppScope.of(context).pro.isPro;
+                      final gated = isMealPro(detail.id) && !isPro;
+                      if (gated) {
+                        return _MealPaywall(mealName: detail.name);
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _ActionBar(
+                            isFavorite: _isFavorite,
+                            busy: _favoriteLoading,
+                            onToggleFavorite: _toggleFavorite,
+                            onShare: _share,
+                          ),
+                          if (detail.youtubeUrl != null ||
+                              detail.sourceUrl != null) ...[
+                            const SizedBox(height: 10),
+                            _RecipeLinks(
+                              youtubeUrl: detail.youtubeUrl,
+                              sourceUrl: detail.sourceUrl,
+                              onOpen: _openUrl,
                             ),
-                          )
-                          .toList(),
-                    ),
-                    const SizedBox(height: 28),
-                  ],
-                  _SectionLabel(label: 'INGREDIENTS'),
-                  const SizedBox(height: 12),
-                  _IngredientsList(detail: detail),
-                  const SizedBox(height: 28),
-                  _SectionLabel(label: 'INSTRUCTIONS'),
-                  const SizedBox(height: 12),
-                  Text(detail.instructions, style: AppTextStyles.body),
-                  const SizedBox(height: 28),
-                  _SectionLabel(label: 'YOUR NOTES'),
-                  const SizedBox(height: 12),
-                  TextField(
-                    enabled: false,
-                    maxLines: 3,
-                    decoration: InputDecoration(
-                      hintText: _isFavorite
-                          ? 'Open from Favorites to edit your notes.'
-                          : 'Save this recipe to add personal notes.',
-                      prefixIcon: const Icon(
-                        Icons.sticky_note_2_outlined,
-                        size: 20,
-                      ),
-                    ),
+                          ],
+                          const SizedBox(height: 28),
+                          if (detail.tags.isNotEmpty) ...[
+                            _SectionLabel(label: 'TAGS'),
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: detail.tags
+                                  .map(
+                                    (t) => PillTag(
+                                      label: t,
+                                      variant: PillTagVariant.ghostDark,
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                            const SizedBox(height: 28),
+                          ],
+                          _SectionLabel(label: 'INGREDIENTS'),
+                          const SizedBox(height: 12),
+                          _IngredientsList(detail: detail),
+                          const SizedBox(height: 28),
+                          _SectionLabel(label: 'INSTRUCTIONS'),
+                          const SizedBox(height: 12),
+                          Text(detail.instructions, style: AppTextStyles.body),
+                          const SizedBox(height: 18),
+                          _CookingModeCta(detail: detail),
+                          const SizedBox(height: 28),
+                          _SectionLabel(label: 'YOUR NOTES'),
+                          const SizedBox(height: 12),
+                          _NotesBlock(
+                            mealId: detail.id,
+                            isFavorite: _isFavorite,
+                          ),
+                        ],
+                      );
+                    },
                   ),
-                  if (_isFavorite) ...[
-                    const SizedBox(height: 18),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () =>
-                            context.push('/edit-note/${detail.id}'),
-                        icon: const Icon(Icons.edit_rounded, size: 18),
-                        label: const Text('Edit personal note'),
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -542,6 +550,368 @@ class _IngredientsList extends StatelessWidget {
                 color: AppColors.border,
               ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// "Start Cooking Mode" CTA — Pro-gated. Free users get a nudge to upgrade.
+class _CookingModeCta extends StatelessWidget {
+  final MealDetail detail;
+
+  const _CookingModeCta({required this.detail});
+
+  void _launch(BuildContext context) {
+    final isPro = AppScope.of(context).pro.isPro;
+    if (!isPro) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Cooking Mode is a Pro feature. Tap to learn more.',
+          ),
+          action: SnackBarAction(
+            label: 'Go Pro',
+            onPressed: () => context.go('/pro'),
+          ),
+        ),
+      );
+      return;
+    }
+    final steps = splitInstructionsIntoSteps(detail.instructions);
+    if (steps.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('This recipe has no instructions to cook from.'),
+        ),
+      );
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CookingModeScreen(title: detail.name, steps: steps),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Rebuild when Pro entitlement changes so the lock icon disappears
+    // after unlocking without re-opening the screen.
+    final pro = AppScope.of(context).pro;
+    return ListenableBuilder(
+      listenable: pro,
+      builder: (context, _) {
+        final isPro = pro.isPro;
+        return SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () => _launch(context),
+            icon: Icon(
+              isPro
+                  ? Icons.local_fire_department_rounded
+                  : Icons.lock_outline_rounded,
+              size: 20,
+            ),
+            label: Text(
+              isPro ? 'Start Cooking Mode' : 'Cooking Mode — Pro',
+              style: AppTextStyles.button.copyWith(fontSize: 15),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.orange,
+              foregroundColor: AppColors.textOnDark,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Inline tap-to-edit notes block.
+///
+/// • Not favorited → hint that asks the user to save the recipe first.
+/// • Favorited + empty note → "Tap to add a note" affordance.
+/// • Favorited + saved note → shows title + body inline; tapping opens
+///   the editor and the block reloads when the editor returns.
+class _NotesBlock extends StatefulWidget {
+  final String mealId;
+  final bool isFavorite;
+
+  const _NotesBlock({required this.mealId, required this.isFavorite});
+
+  @override
+  State<_NotesBlock> createState() => _NotesBlockState();
+}
+
+class _NotesBlockState extends State<_NotesBlock> {
+  FavoriteMeal? _favorite;
+  bool _loading = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (widget.isFavorite) _load();
+  }
+
+  @override
+  void didUpdateWidget(_NotesBlock old) {
+    super.didUpdateWidget(old);
+    if (widget.isFavorite && !old.isFavorite) _load();
+    if (!widget.isFavorite && old.isFavorite) {
+      setState(() => _favorite = null);
+    }
+  }
+
+  Future<void> _load() async {
+    if (!mounted) return;
+    setState(() => _loading = true);
+    final repo = AppScope.of(context).favorites;
+    final fav = await repo.getById(widget.mealId);
+    if (!mounted) return;
+    setState(() {
+      _favorite = fav;
+      _loading = false;
+    });
+  }
+
+  Future<void> _openEditor() async {
+    await context.push('/edit-note/${widget.mealId}');
+    if (!mounted) return;
+    // Reload so the inline preview reflects what was just saved.
+    await _load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.isFavorite) {
+      return Container(
+        padding: const EdgeInsets.all(AppTheme.spaceMd),
+        decoration: AppTheme.card,
+        child: Row(
+          children: [
+            Icon(
+              Icons.sticky_note_2_outlined,
+              size: 20,
+              color: AppColors.muted,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Save this recipe to favorites to start a personal note.',
+                style: AppTextStyles.bodyMuted,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_loading && _favorite == null) {
+      return Container(
+        padding: const EdgeInsets.all(AppTheme.spaceMd),
+        decoration: AppTheme.card,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.muted),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text('Loading your note…', style: AppTextStyles.bodyMuted),
+          ],
+        ),
+      );
+    }
+
+    final fav = _favorite;
+    final hasNote = fav != null &&
+        (fav.noteTitle.trim().isNotEmpty || fav.noteBody.trim().isNotEmpty);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _openEditor,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppTheme.spaceMd),
+          decoration: AppTheme.card,
+          child: hasNote
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.sticky_note_2_rounded,
+                          size: 18,
+                          color: AppColors.orange,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            fav.noteTitle.isEmpty
+                                ? 'Note'
+                                : fav.noteTitle,
+                            style: AppTextStyles.subheading,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Icon(
+                          Icons.edit_rounded,
+                          size: 16,
+                          color: AppColors.muted,
+                        ),
+                      ],
+                    ),
+                    if (fav.noteBody.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(fav.noteBody, style: AppTextStyles.body),
+                    ],
+                  ],
+                )
+              : Row(
+                  children: [
+                    Icon(
+                      Icons.add_rounded,
+                      color: AppColors.orange,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Tap to add a note',
+                        style: AppTextStyles.body.copyWith(
+                          color: AppColors.orange,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: AppColors.muted,
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Back-arrow with a soft dark backdrop so it stays legible on any photo
+/// hero, regardless of light/dark mode or image tonality.
+class _HeroBackButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const _HeroBackButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, top: 4, bottom: 4),
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.35),
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onPressed,
+          child: const SizedBox(
+            width: 38,
+            height: 38,
+            child: Icon(
+              Icons.arrow_back_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Paywall shown in place of the ingredients/instructions when a Pro-gated
+/// meal is opened by a free user.
+class _MealPaywall extends StatelessWidget {
+  final String mealName;
+
+  const _MealPaywall({required this.mealName});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: AppTheme.darkPanel,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.lime,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.lock_rounded,
+                  color: AppColors.inkFixed,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'PRO RECIPE',
+                style: AppTextStyles.eyebrow.copyWith(color: AppColors.lime),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Unlock $mealName',
+            style: AppTextStyles.subheading.copyWith(
+              color: AppColors.textOnDark,
+              fontSize: 22,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'This recipe is part of the TerraBite Pro collection. '
+            'Go Pro to see the ingredients, full method, and unlock '
+            'Cooking Mode for every dish in the catalogue.',
+            style: AppTextStyles.body.copyWith(
+              color: AppColors.textOnDark.withValues(alpha: 0.82),
+            ),
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => context.go('/pro'),
+              icon: const Icon(Icons.star_rounded, size: 20),
+              label: Text(
+                'Go Pro',
+                style: AppTextStyles.button.copyWith(fontSize: 15),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.orange,
+                foregroundColor: AppColors.textOnDark,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -7,8 +7,10 @@ import 'services/auth_repository.dart';
 import 'services/favorites_repository.dart';
 import 'services/in_memory_favorites_repository.dart';
 import 'services/meal_api_service.dart';
+import 'services/meal_plan_repository.dart';
 import 'services/pro_controller.dart';
 import 'services/recently_viewed_repository.dart';
+import 'services/settings_controller.dart';
 import 'theme/app_colors.dart';
 import 'theme/app_theme.dart';
 
@@ -21,20 +23,26 @@ Future<void> main() async {
         ? InMemoryFavoritesRepository()
         : SqfliteFavoritesRepository();
     final recentlyViewed = RecentlyViewedRepository();
+    final mealPlan = MealPlanRepository();
     final auth = AuthRepository();
     final pro = ProController();
+    final settings = SettingsController();
     await favorites.init().timeout(const Duration(seconds: 15));
     await recentlyViewed.init();
+    await mealPlan.init();
     await auth.init();
     pro.bindAuth(auth);
     await pro.load();
+    await settings.load();
     runApp(
       TerraBiteApp(
         api: api,
         favorites: favorites,
         recentlyViewed: recentlyViewed,
+        mealPlan: mealPlan,
         pro: pro,
         auth: auth,
+        settings: settings,
       ),
     );
   } catch (error, stack) {
@@ -47,16 +55,20 @@ class TerraBiteApp extends StatefulWidget {
   final MealApiService api;
   final FavoritesRepository favorites;
   final RecentlyViewedRepository recentlyViewed;
+  final MealPlanRepository mealPlan;
   final ProController pro;
   final AuthRepository auth;
+  final SettingsController settings;
 
   const TerraBiteApp({
     super.key,
     required this.api,
     required this.favorites,
     required this.recentlyViewed,
+    required this.mealPlan,
     required this.pro,
     required this.auth,
+    required this.settings,
   });
 
   @override
@@ -71,22 +83,45 @@ class _TerraBiteAppState extends State<TerraBiteApp>
   @override
   void initState() {
     super.initState();
-    AppColors.brightness =
-        WidgetsBinding.instance.platformDispatcher.platformBrightness;
+    _syncBrightness();
     WidgetsBinding.instance.addObserver(this);
+    widget.settings.addListener(_onSettingsChanged);
   }
 
   @override
   void dispose() {
+    widget.settings.removeListener(_onSettingsChanged);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
+  void _onSettingsChanged() {
+    if (!mounted) return;
+    setState(_syncBrightness);
+  }
+
   @override
   void didChangePlatformBrightness() {
-    final next = WidgetsBinding.instance.platformDispatcher.platformBrightness;
-    if (next != AppColors.brightness) {
-      setState(() => AppColors.brightness = next);
+    // Only react to the system change when we're actually following it.
+    if (widget.settings.themeMode == ThemeMode.system) {
+      setState(_syncBrightness);
+    }
+  }
+
+  /// Resolves the effective UI brightness from (settings override) ?? (system).
+  void _syncBrightness() {
+    final mode = widget.settings.themeMode;
+    switch (mode) {
+      case ThemeMode.light:
+        AppColors.brightness = Brightness.light;
+        break;
+      case ThemeMode.dark:
+        AppColors.brightness = Brightness.dark;
+        break;
+      case ThemeMode.system:
+        AppColors.brightness =
+            WidgetsBinding.instance.platformDispatcher.platformBrightness;
+        break;
     }
   }
 
@@ -96,8 +131,10 @@ class _TerraBiteAppState extends State<TerraBiteApp>
       api: widget.api,
       favorites: widget.favorites,
       recentlyViewed: widget.recentlyViewed,
+      mealPlan: widget.mealPlan,
       pro: widget.pro,
       auth: widget.auth,
+      settings: widget.settings,
       child: MaterialApp.router(
         title: 'TerraBite',
         debugShowCheckedModeBanner: false,

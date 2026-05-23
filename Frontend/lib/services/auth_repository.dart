@@ -377,6 +377,100 @@ class AuthRepository extends ChangeNotifier {
     }
   }
 
+  // ── Self-service (current user) ─────────────────────────────────────────
+
+  /// Update the signed-in user's display name + email.
+  Future<AppUser> updateCurrentProfile({
+    required String displayName,
+    required String email,
+  }) async {
+    final me = _currentUser;
+    if (me == null) {
+      throw const AuthException('You are not signed in.');
+    }
+    final cleanEmail = email.trim().toLowerCase();
+    final cleanName = displayName.trim();
+    if (cleanEmail.isEmpty || !cleanEmail.contains('@')) {
+      throw const AuthException('Please enter a valid email address.');
+    }
+    if (cleanName.length < 2) {
+      throw const AuthException('Display name must be at least 2 characters.');
+    }
+    final dup = await _db!.query(
+      _table,
+      where: 'email = ? AND id != ?',
+      whereArgs: [cleanEmail, me.id],
+      limit: 1,
+    );
+    if (dup.isNotEmpty) {
+      throw const AuthException('Another account already uses that email.');
+    }
+    final updated = me.copyWith(email: cleanEmail, displayName: cleanName);
+    await _db!.update(
+      _table,
+      updated.toRow(),
+      where: 'id = ?',
+      whereArgs: [me.id],
+    );
+    _currentUser = updated;
+    notifyListeners();
+    return updated;
+  }
+
+  /// Change the signed-in user's password after verifying the current one.
+  Future<void> changeCurrentPassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final me = _currentUser;
+    if (me == null) {
+      throw const AuthException('You are not signed in.');
+    }
+    if (_hash(currentPassword, me.salt) != me.passwordHash) {
+      throw const AuthException('Your current password is incorrect.');
+    }
+    if (newPassword.length < 6) {
+      throw const AuthException('New password must be at least 6 characters.');
+    }
+    final salt = _generateSalt();
+    final updated = me.copyWith(
+      passwordHash: _hash(newPassword, salt),
+      salt: salt,
+    );
+    await _db!.update(
+      _table,
+      updated.toRow(),
+      where: 'id = ?',
+      whereArgs: [me.id],
+    );
+    _currentUser = updated;
+    notifyListeners();
+  }
+
+  /// Delete the signed-in user's account after verifying their password.
+  /// Refuses if they're the last admin to avoid locking everyone out.
+  Future<void> deleteCurrentAccount({required String password}) async {
+    final me = _currentUser;
+    if (me == null) {
+      throw const AuthException('You are not signed in.');
+    }
+    if (_hash(password, me.salt) != me.passwordHash) {
+      throw const AuthException('Password is incorrect.');
+    }
+    if (me.isAdmin) {
+      final all = await getAllUsers();
+      final admins = all.where((u) => u.isAdmin).length;
+      if (admins <= 1) {
+        throw const AuthException(
+          'You are the last admin. Promote another user before deleting '
+          'your account.',
+        );
+      }
+    }
+    await _db!.delete(_table, where: 'id = ?', whereArgs: [me.id]);
+    await signOut();
+  }
+
   /// Convenience for the Pro tab: upgrade the current user to Pro.
   Future<void> upgradeCurrentToPro() async {
     final me = _currentUser;
