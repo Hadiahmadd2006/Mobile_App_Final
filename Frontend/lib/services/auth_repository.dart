@@ -68,11 +68,11 @@ class AuthRepository extends ChangeNotifier {
       ffi.sqfliteFfiInit();
       factory = ffi.databaseFactoryFfi;
       final dir = await getApplicationSupportDirectory();
-      path = p.join(dir.path, 'terrabite.db');
+      path = p.join(dir.path, 'terrabite_users.db');
     } else {
       factory = databaseFactory;
       final dir = await getDatabasesPath();
-      path = p.join(dir, 'terrabite.db');
+      path = p.join(dir, 'terrabite_users.db');
     }
 
     _db = await factory.openDatabase(
@@ -80,24 +80,39 @@ class AuthRepository extends ChangeNotifier {
       options: OpenDatabaseOptions(
         version: _version,
         onCreate: (db, version) async {
-          await db.execute('''
-            CREATE TABLE $_table (
-              id TEXT PRIMARY KEY,
-              email TEXT NOT NULL UNIQUE,
-              displayName TEXT NOT NULL,
-              role TEXT NOT NULL,
-              plan TEXT NOT NULL,
-              passwordHash TEXT NOT NULL,
-              salt TEXT NOT NULL,
-              createdAt TEXT NOT NULL
-            )
-          ''');
+          await _createUsersTable(db);
+        },
+        onUpgrade: (db, oldVersion, newVersion) async {
+          // The favorites repo may have created the database at v1 without
+          // our table. Add it on the upgrade path so existing installs work.
+          await _createUsersTable(db);
+        },
+        onOpen: (db) async {
+          // Belt-and-braces: if both repos point at the same version on a
+          // fresh DB and the other one opens first, neither onCreate nor
+          // onUpgrade runs for us. Make sure the table exists.
+          await _createUsersTable(db);
         },
       ),
     );
 
     await _ensureSeedAdmin();
     await _restoreSession();
+  }
+
+  Future<void> _createUsersTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $_table (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL UNIQUE,
+        displayName TEXT NOT NULL,
+        role TEXT NOT NULL,
+        plan TEXT NOT NULL,
+        passwordHash TEXT NOT NULL,
+        salt TEXT NOT NULL,
+        createdAt TEXT NOT NULL
+      )
+    ''');
   }
 
   /// Seeds a default admin account on first launch so the Admin Dashboard
@@ -422,4 +437,3 @@ class AuthRepository extends ChangeNotifier {
     return sha256.convert(bytes).toString();
   }
 }
-
