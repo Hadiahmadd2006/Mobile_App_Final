@@ -1,48 +1,46 @@
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-/// Holds the (test) Pro-subscription entitlement.
-///
-/// No real in-app purchase — the in-app "Go Pro" button simply flips this
-/// flag. It is persisted locally so the Pro state survives app restarts,
-/// and can be reset back to free for testing.
+import 'auth_repository.dart';
+
+/// Bridges the existing `pro.isPro` API onto the per-user plan stored in
+/// [AuthRepository]. Every existing call site (Pro tab, paywall card,
+/// Michelin gates) keeps working without changes — the source of truth has
+/// just moved from a single SharedPreferences flag to the signed-in user's
+/// row in the local database.
 class ProController extends ChangeNotifier {
-  static const String _key = 'terrabite_is_pro';
+  AuthRepository? _auth;
 
-  bool _isPro = false;
-  bool get isPro => _isPro;
+  ProController();
 
-  /// Loads the persisted entitlement. Best-effort — defaults to free.
-  Future<void> load() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      _isPro = prefs.getBool(_key) ?? false;
-    } catch (_) {
-      _isPro = false;
-    }
+  /// Connects this controller to the auth repo at startup. Called once
+  /// from `main.dart` after both have been instantiated.
+  void bindAuth(AuthRepository auth) {
+    _auth = auth;
+    _auth!.addListener(_onAuthChanged);
     notifyListeners();
   }
 
-  Future<void> _persist() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_key, _isPro);
-    } catch (_) {
-      // Best-effort — never disrupt the app over a test flag.
-    }
+  void _onAuthChanged() => notifyListeners();
+
+  @override
+  void dispose() {
+    _auth?.removeListener(_onAuthChanged);
+    super.dispose();
   }
+
+  /// `true` once the signed-in user's plan is Pro. Anonymous (signed-out)
+  /// visitors are treated as free.
+  bool get isPro => _auth?.currentUser?.isPro ?? false;
+
+  /// Kept for backwards compatibility with the old startup flow — the auth
+  /// repo persists the plan, so there is nothing else to load here.
+  Future<void> load() async {}
 
   Future<void> goPro() async {
-    if (_isPro) return;
-    _isPro = true;
-    notifyListeners();
-    await _persist();
+    await _auth?.upgradeCurrentToPro();
   }
 
   Future<void> restoreToFree() async {
-    if (!_isPro) return;
-    _isPro = false;
-    notifyListeners();
-    await _persist();
+    await _auth?.downgradeCurrentToFree();
   }
 }

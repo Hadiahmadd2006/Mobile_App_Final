@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'app_scope.dart';
 import 'routing/app_router.dart';
+import 'services/auth_repository.dart';
 import 'services/favorites_repository.dart';
 import 'services/in_memory_favorites_repository.dart';
 import 'services/meal_api_service.dart';
@@ -20,9 +21,12 @@ Future<void> main() async {
         ? InMemoryFavoritesRepository()
         : SqfliteFavoritesRepository();
     final recentlyViewed = RecentlyViewedRepository();
+    final auth = AuthRepository();
     final pro = ProController();
     await favorites.init().timeout(const Duration(seconds: 15));
     await recentlyViewed.init();
+    await auth.init();
+    pro.bindAuth(auth);
     await pro.load();
     runApp(
       TerraBiteApp(
@@ -30,6 +34,7 @@ Future<void> main() async {
         favorites: favorites,
         recentlyViewed: recentlyViewed,
         pro: pro,
+        auth: auth,
       ),
     );
   } catch (error, stack) {
@@ -43,6 +48,7 @@ class TerraBiteApp extends StatefulWidget {
   final FavoritesRepository favorites;
   final RecentlyViewedRepository recentlyViewed;
   final ProController pro;
+  final AuthRepository auth;
 
   const TerraBiteApp({
     super.key,
@@ -50,6 +56,7 @@ class TerraBiteApp extends StatefulWidget {
     required this.favorites,
     required this.recentlyViewed,
     required this.pro,
+    required this.auth,
   });
 
   @override
@@ -59,7 +66,7 @@ class TerraBiteApp extends StatefulWidget {
 class _TerraBiteAppState extends State<TerraBiteApp>
     with WidgetsBindingObserver {
   // Created once so navigation state survives dark/light rebuilds.
-  final _router = AppRouter.build();
+  late final _router = AppRouter.build(auth: widget.auth);
 
   @override
   void initState() {
@@ -90,6 +97,7 @@ class _TerraBiteAppState extends State<TerraBiteApp>
       favorites: widget.favorites,
       recentlyViewed: widget.recentlyViewed,
       pro: widget.pro,
+      auth: widget.auth,
       child: MaterialApp.router(
         title: 'TerraBite',
         debugShowCheckedModeBanner: false,

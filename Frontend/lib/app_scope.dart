@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'services/auth_repository.dart';
 import 'services/favorites_repository.dart';
 import 'services/meal_api_service.dart';
 import 'services/pro_controller.dart';
@@ -10,6 +11,7 @@ class AppScope extends InheritedWidget {
   final FavoritesRepository favorites;
   final RecentlyViewedRepository recentlyViewed;
   final ProController pro;
+  final AuthRepository auth;
 
   const AppScope({
     super.key,
@@ -17,6 +19,7 @@ class AppScope extends InheritedWidget {
     required this.favorites,
     required this.recentlyViewed,
     required this.pro,
+    required this.auth,
     required super.child,
   });
 
@@ -31,5 +34,6 @@ class AppScope extends InheritedWidget {
       api != oldWidget.api ||
       favorites != oldWidget.favorites ||
       recentlyViewed != oldWidget.recentlyViewed ||
-      pro != oldWidget.pro;
+      pro != oldWidget.pro ||
+      auth != oldWidget.auth;
 }

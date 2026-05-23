@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../app_scope.dart';
 import '../routing/app_router.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
@@ -11,6 +12,9 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = AppScope.of(context).auth;
+    final user = auth.currentUser;
+
     return Drawer(
       backgroundColor: AppColors.cream,
       shape: const RoundedRectangleBorder(),
@@ -18,6 +22,7 @@ class AppDrawer extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // ── Header ─────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppTheme.spaceLg,
@@ -31,10 +36,9 @@ class AppDrawer extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
-                        'TerraBite',
-                        style: AppTextStyles.heading.copyWith(fontSize: 26),
-                      ),
+                      Text('TerraBite',
+                          style:
+                              AppTextStyles.heading.copyWith(fontSize: 26)),
                       const SizedBox(width: 6),
                       Container(
                         margin: const EdgeInsets.only(bottom: 6),
@@ -48,16 +52,58 @@ class AppDrawer extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'PREMIUM RECIPES · NO SHORTCUTS',
-                    style: AppTextStyles.eyebrow.copyWith(
-                      color: AppColors.muted,
-                      fontSize: 10,
-                    ),
-                  ),
+                  Text('PREMIUM RECIPES · NO SHORTCUTS',
+                      style: AppTextStyles.eyebrow.copyWith(
+                          color: AppColors.muted, fontSize: 10)),
                 ],
               ),
             ),
+            if (user != null) ...[
+              Container(
+                margin: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spaceLg),
+                padding: const EdgeInsets.all(14),
+                decoration: AppTheme.cardSoft,
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 18,
+                      backgroundColor: user.isAdmin
+                          ? AppColors.espresso
+                          : AppColors.orange.withValues(alpha: 0.2),
+                      child: Text(
+                        user.displayName.isNotEmpty
+                            ? user.displayName.characters.first.toUpperCase()
+                            : '?',
+                        style: AppTextStyles.heading.copyWith(
+                          fontSize: 16,
+                          color: user.isAdmin
+                              ? AppColors.textOnDark
+                              : AppColors.orange,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(user.displayName,
+                              style: AppTextStyles.subheading,
+                              overflow: TextOverflow.ellipsis),
+                          const SizedBox(height: 1),
+                          Text(
+                            '${user.isAdmin ? "Admin" : "User"} · ${user.isPro ? "Pro" : "Free"}',
+                            style: AppTextStyles.label,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceMd),
+            ],
             Divider(height: 1, color: AppColors.border),
             const SizedBox(height: AppTheme.spaceSm),
             _DrawerItem(
@@ -84,6 +130,15 @@ class AppDrawer extends StatelessWidget {
                 context.go(AppRoutes.favorites);
               },
             ),
+            if (auth.isAdmin)
+              _DrawerItem(
+                icon: Icons.shield_outlined,
+                label: 'Admin Dashboard',
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.push(AppRoutes.adminBase);
+                },
+              ),
             // TEMPORARY: preview the 404 screen via an unmatched route.
             _DrawerItem(
               icon: Icons.error_outline_rounded,
@@ -117,6 +172,17 @@ class AppDrawer extends StatelessWidget {
                 );
               },
             ),
+            if (user != null)
+              _DrawerItem(
+                icon: Icons.logout_rounded,
+                label: 'Sign Out',
+                destructive: true,
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  await auth.signOut();
+                  if (context.mounted) context.go(AppRoutes.welcome);
+                },
+              ),
             const SizedBox(height: AppTheme.spaceSm),
           ],
         ),
@@ -129,23 +195,30 @@ class _DrawerItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final bool destructive;
 
   const _DrawerItem({
     required this.icon,
     required this.label,
     required this.onTap,
+    this.destructive = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final color = destructive ? AppColors.danger : AppColors.orange;
     return ListTile(
-      leading: Icon(icon, color: AppColors.orange),
+      leading: Icon(icon, color: color),
       title: Text(
         label,
-        style: AppTextStyles.subheading.copyWith(fontSize: 15),
+        style: AppTextStyles.subheading.copyWith(
+          fontSize: 15,
+          color: destructive ? AppColors.danger : null,
+        ),
       ),
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
     );
   }
 }
